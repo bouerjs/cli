@@ -1,14 +1,13 @@
 {
   "name": "bouer-cli",
-  "version": "0.6.1",
+  "version": "0.8.2",
   "description": "Command Line Interface (CLI) for bouerjs",
   "main": "index.js",
   "bin": {
     "bouer": "./index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rollup -c"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "Bouer"
