@@ -1,12 +1,14 @@
 # Bouer CLI
 
-Command Line Interface (CLI) for Bouer.js
+Command Line Interface (CLI) for [Bouer.js](https://bouerjs.github.io) - A JavaScript Library for building user interfaces.
 
 ## Table of Contents
 - [Installation](#installation)
-- [Features](#features)
 - [Available Commands](#available-commands)
-- [Create a New Project](#create-a-new-project)
+  - [Create New Project](#create-new-project)
+  - [Run Development Server](#run-development-server)
+  - [Install Dependencies](#install-dependencies)
+  - [Build Project](#build-project)
 - [Development](#development)
 - [Contributing](#contributing)
 - [License](#license)
@@ -26,30 +28,79 @@ npm install -g bouer-cli
 - Git repository initialization
 - Project scaffolding from templates
 
-### Available Commands
+## Available Commands
 
+### Basic Commands
 - `bouer -v, --version` - Display CLI version
 - `bouer -h, --help` - Display help information
 - `bouer install` - Installs dependencies for the current Bouer.js project
-- `bouer create <project-name>` - Create a new Bouer.js project
+- `bouer create new <project-name> [-t, --template <type>]` - Create a new Bouer.js project with optional template type (blank or routing)
 - `bouer run` - Runs the development live server for the current Bouer.js project
+- `bouer build [-m, --mode <mode>]` - Builds the Bouer.js project for development or production (dev or prod)
 
-### Create a New Project
+### Create New Project
 
-Create a new Bouer.js project:
+Create a new Bouer.js project with a starter template:
 
 ```bash
-bouer create <project-name>
+bouer create new <project-name> [-t, --template <type>]
 ```
+
+Options:
+- `--template <name>` - Specify template to use (default: "blank")
+
 Example:
+```bash
+bouer create new my-awesome-app
+```
+
+### Run Development Server
+
+Start the development server with hot-reload:
 
 ```bash
-bouer create my-project
+bouer run
+```
+
+### Install Dependencies
+
+Install or update project dependencies:
+
+```bash
+bouer install
+```
+
+### Build Project
+
+Build your project for production:
+
+```bash
+bouer build [options]
+```
+
+Options:
+- `--mode <mode>` - Build mode (dev/prod)
+
+## Project Structure
+
+After creating a new blank project, you'll have the following structure:
+
+```
+my-project/
+├── src/
+│   ├── components/
+│   ├── assets/
+│   ├── styles/
+│   └── app.js
+├── public/
+│   └── index.html
+├── package.json
+└── bouer.config.js
 ```
 
 ## Development
 
-To contribute to this CLI:
+To contribute to the CLI:
 
 1. Clone the repository:
 ```bash
@@ -67,14 +118,8 @@ npm install
 npm link
 ```
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+
