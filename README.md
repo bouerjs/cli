@@ -81,23 +81,6 @@ bouer build [options]
 Options:
 - `--mode <mode>` - Build mode (dev/prod)
 
-## Project Structure
-
-After creating a new blank project, you'll have the following structure:
-
-```
-my-project/
-├── src/
-│   ├── components/
-│   ├── assets/
-│   ├── styles/
-│   └── app.js
-├── public/
-│   └── index.html
-├── package.json
-└── bouer.config.js
-```
-
 ## Development
 
 To contribute to the CLI:
