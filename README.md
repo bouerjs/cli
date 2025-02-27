@@ -35,6 +35,7 @@ npm install -g bouer-cli
 - `bouer -h, --help` - Display help information
 - `bouer install` - Installs dependencies for the current Bouer.js project
 - `bouer create new <project-name> [-t, --template <type>]` - Create a new Bouer.js project with optional template type (blank or routing)
+- `bouer create component <component-name> [-p, --path <path>]` - Create a new component in the current project
 - `bouer run` - Runs the development live server for the current Bouer.js project
 - `bouer build [-m, --mode <mode>]` - Builds the Bouer.js project for development or production (dev or prod)
 

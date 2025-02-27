@@ -37,7 +37,7 @@ module.exports = function createCommand(program) {
                 }
 
                 // Create temporary directory
-                const tempDir = 'temp-' + Math.random().toString(36).substr(2, 9);
+                const tempDir = 'temp-' + Math.random().toString(36).slice(2, 11);
 
                 // Clone the specific branch/directory
                 await simpleGit().clone(
@@ -77,17 +77,82 @@ Access your app at: http://127.0.0.1:8080
     create
         .command('component <component-name>')
         .description('Creates a new component')
-        .action((componentName) => {
-            console.log(`Creating new component: ${componentName}`);
-            // Component creation logic
+        .option('-p, --path <path>', 'Path to create the component (root: ./src)', './')
+        .action(async (componentName, options) => {
+            try {
+                createComponent(componentName, options.path);
+            } catch (error) {
+                console.error('Error:', error.message);
+                process.exit(1);
+            }
         });
 
-    // Subcommand for service
-    create
-        .command('service <service-name>')
-        .description('Creates a new service')
-        .action((serviceName) => {
-            console.log(`Creating new service: ${serviceName}`);
-            // Service creation logic
-        });
 }; 
+
+
+async function createComponent(componentName, targetPath) {
+
+    const packagePath = path.join(process.cwd(), 'package.json');
+    if (!fs.existsSync(packagePath)) {
+        console.error('Error: No package.json found. Make sure you are in a Bouer.js project directory.');
+        process.exit(1);
+    }
+
+    // Check if path exists, create if it doesn't
+    if (targetPath !== './') {
+        targetPath = 'src/'+targetPath+'/'+componentName;
+    } else {
+        targetPath = 'src/'+componentName;
+    }
+
+    // check if the target path exists, create if it doesn't
+    if (!fs.existsSync(targetPath)) {
+        fs.mkdirSync(targetPath, { recursive: true });
+
+        // Create temporary directory
+        const tempDir = 'temp-' + Math.random().toString(36).slice(2, 11);
+
+        // Clone the specific branch/directory
+        await simpleGit().clone(
+            repoUrl,tempDir,['--depth', '1']  // Shallow clone for speed
+        );
+
+        // Copy only the needed template directory
+        const repoPath = path.join(tempDir, 'component/blank');  // Adjust path as needed
+        fs.cpSync(repoPath, targetPath, { recursive: true });
+
+        // Clean up temp directory
+        fs.rmSync(tempDir, { recursive: true, force: true });
+
+        renameGeneratedComponent(componentName, targetPath);
+
+        console.log(`Component ${componentName} created successfully in ${targetPath}`);
+
+    } else {
+        console.log(`Component ${componentName} already exists in ${targetPath}`);
+    }
+
+}
+
+function renameGeneratedComponent(componentName, targetPath) {
+
+    const fileExtensions = ['css', 'html', 'ts'];
+    const componentNameLower = componentName.toLowerCase();
+    
+    fileExtensions.forEach(ext => {
+        fs.renameSync(
+            path.join(targetPath, `${ext}.tmp`),
+            path.join(targetPath, `${componentNameLower}.${ext}`)
+        );
+    });
+
+    // update the ts file
+    const tsFile = targetPath+'/'+componentName+'.ts';
+    const tsContent = fs.readFileSync(tsFile, 'utf8');
+
+    const updatedContent = tsContent
+        .replaceAll('{name}', componentName)
+        .replaceAll('{lower-name}', componentName.toLowerCase());
+        
+    fs.writeFileSync(tsFile, updatedContent);
+}
