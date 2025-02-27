@@ -136,14 +136,16 @@ async function createComponent(componentName, targetPath) {
 
 function renameGeneratedComponent(componentName, targetPath) {
 
-    const fileExtensions = ['css', 'html', 'ts'];
+    const fileExtensions = ['scss', 'css', 'html', 'ts'];
     const componentNameLower = componentName.toLowerCase();
     
     fileExtensions.forEach(ext => {
-        fs.renameSync(
-            path.join(targetPath, `${ext}.tmp`),
-            path.join(targetPath, `${componentNameLower}.${ext}`)
-        );
+        if (fs.existsSync(path.join(targetPath, `${ext}.tmp`))) {
+            fs.renameSync(
+                path.join(targetPath, `${ext}.tmp`),
+                path.join(targetPath, `${componentNameLower}.${ext}`)
+            );
+        }
     });
 
     // update the ts file
