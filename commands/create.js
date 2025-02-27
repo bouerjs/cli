@@ -16,61 +16,14 @@ module.exports = function createCommand(program) {
         .description('Create a new Bouer.js project')
         .option('-t, --template <type>', 'Template type (blank or routing)', 'blank')
         .action(async (projectName, options) => {
-            const git = simpleGit();
-
+            
             try {
-
-                const template = options.template.toLowerCase();
-        
-                // Validate template type
-                if (!['blank', 'routing'].includes(template)) {
-                  console.error('Invalid template. Please use either "blank" or "routing"');
-                  process.exit(1);
-                }
-        
-                console.log(`Creating new ${template} project: ${projectName}`);
-
-                // Check if directory already exists
-                if (fs.existsSync(projectName)) {
-                    console.error(`Error: Directory ${projectName} already exists`);
-                    process.exit(1);
-                }
-
-                // Create temporary directory
-                const tempDir = 'temp-' + Math.random().toString(36).slice(2, 11);
-
-                // Clone the specific branch/directory
-                await simpleGit().clone(
-                    repoUrl,tempDir,['--depth', '1']  // Shallow clone for speed
-                );
-
-                // Copy only the needed template directory
-                const templatePath = path.join(tempDir, '/app/'+template);  // Adjust path as needed
-                fs.mkdirSync(projectName);
-                fs.cpSync(templatePath, projectName, { recursive: true });
-
-                // Clean up temp directory
-                fs.rmSync(tempDir, { recursive: true, force: true });
-
-                console.log('Installing dependencies...');
-                execSync('npm install', { cwd: projectName, stdio: 'inherit' });
-
-                console.log(`
-Successfully created project ${projectName}
-Dependencies installed.
-
-Get started with:
-cd ${projectName}
-bouer run
-Access your app at: http://127.0.0.1:8080
-                `);
-
+                createProject(projectName, options);
             } catch (error) {
                 console.error('Error:', error.message);
                 process.exit(1);
             }
 
-            
         });
     
     // Subcommand for component
@@ -89,6 +42,75 @@ Access your app at: http://127.0.0.1:8080
 
 }; 
 
+async function createProject(projectName, options) {
+    const git = simpleGit();
+
+    const template = options.template.toLowerCase();
+        
+    // Validate template type
+    if (!['blank', 'routing'].includes(template)) {
+        console.error('Invalid template. Please use either "blank" or "routing"');
+        process.exit(1);
+    }
+
+    console.log(`Creating new ${template} project: ${projectName}`);
+
+    // Check if directory already exists
+    if (fs.existsSync(projectName)) {
+        console.error(`Error: Directory ${projectName} already exists`);
+        process.exit(1);
+    }
+
+    // Create temporary directory
+    const tempDir = 'temp-' + Math.random().toString(36).slice(2, 11);
+
+    // Clone the specific branch/directory
+    await simpleGit().clone(
+        repoUrl,tempDir,['--depth', '1']  // Shallow clone for speed
+    );
+
+    // Copy only the needed template directory
+    const templatePath = path.join(tempDir, '/app/'+template);  // Adjust path as needed
+    fs.mkdirSync(projectName);
+    fs.cpSync(templatePath, projectName, { recursive: true });
+
+    // update the project name in the package.json file
+    updateProject(projectName);
+
+    // Clean up temp directory
+    fs.rmSync(tempDir, { recursive: true, force: true });
+
+    console.log('Installing dependencies...');
+    execSync('npm install', { cwd: projectName, stdio: 'inherit' });
+
+    console.log(`
+Successfully created project ${projectName}
+Dependencies installed.
+
+Get started with:
+cd ${projectName}
+bouer run
+Access your app at: http://127.0.0.1:8080
+    `);
+
+}
+
+async function updateProject(projectName) {
+    // update the project name in the package.json file
+    const packageJsonPath = path.join(projectName, 'package.json');
+    
+    // Read and parse package.json
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    
+    // Update the name property
+    packageJson.name = projectName;
+    
+    // Write back to file with proper formatting
+    fs.writeFileSync(
+        packageJsonPath, 
+        JSON.stringify(packageJson, null, 2) + '\n'  // 2 spaces indentation + trailing newline
+    );
+}
 
 async function createComponent(componentName, targetPath) {
 
