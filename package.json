@@ -10,12 +10,36 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "Bouer"
+    "bouer",
+    "bouer/cli",
+    "bouer-cli",
+    "cli"
   ],
+  "preferGlobal": true,
   "author": {
-    "name": "Afonso Matumona",
-    "email": "Afonsomatumona@hotmail.com",
-    "url": "https://www.linkedin.com/in/afonsomatelias"
+    "name": "Joaquim Interesting",
+    "email": "interestingjack0@gmail.com",
+    "url": "https://github.com/JoaquimInteresting"
+  },
+  "contributors": [
+    {
+      "name": "Afonso Matumona",
+      "email": "afonsomatumona@hotmail.com",
+      "url": "https://www.github.com/afonsomatelias"
+    },
+    {
+      "name": "Joaquim Interesting",
+      "email": "interestingjack0@gmail.com",
+      "url": "https://github.com/JoaquimInteresting"
+    }
+  ],
+  "homepage": "https://bouerjs.github.io/cli/introduction.html",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bouerjs/cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bouerjs/cli/issues"
   },
   "dependencies": {
     "@babel/cli": "^7.2.3",
