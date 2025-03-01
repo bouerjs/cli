@@ -75,7 +75,7 @@ async function createProject(projectName, options) {
     fs.cpSync(templatePath, projectName, { recursive: true });
 
     // update the project name in the package.json file
-    updateProject(projectName);
+    updateProjectName(projectName);
 
     // Clean up temp directory
     fs.rmSync(tempDir, { recursive: true, force: true });
@@ -95,7 +95,7 @@ Access your app at: http://127.0.0.1:8080
 
 }
 
-async function updateProject(projectName) {
+async function updateProjectName(projectName) {
     // update the project name in the package.json file
     const packageJsonPath = path.join(projectName, 'package.json');
     
