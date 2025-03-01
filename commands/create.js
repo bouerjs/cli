@@ -72,7 +72,8 @@ async function createProject(projectName, options) {
     // Copy only the needed template directory
     const templatePath = path.join(tempDir, '/app/'+template);  // Adjust path as needed
     fs.mkdirSync(projectName);
-    fs.cpSync(templatePath, projectName, { recursive: true });
+    //fs.cpSync(templatePath, projectName, { recursive: true });
+    copyFolderSync(templatePath, projectName);
 
     // update the project name in the package.json file
     updateProjectName(projectName);
@@ -93,6 +94,23 @@ bouer run
 Access your app at: http://127.0.0.1:8080
     `);
 
+}
+
+function copyFolderSync(source, destination) {
+    if (!fs.existsSync(destination)) {
+        fs.mkdirSync(destination, { recursive: true });
+    }
+
+    fs.readdirSync(source).forEach(file => {
+        const srcFile = path.join(source, file);
+        const destFile = path.join(destination, file);
+
+        if (fs.lstatSync(srcFile).isDirectory()) {
+            copyFolderSync(srcFile, destFile);
+        } else {
+            fs.copyFileSync(srcFile, destFile);
+        }
+    });
 }
 
 async function updateProjectName(projectName) {
