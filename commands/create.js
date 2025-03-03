@@ -116,7 +116,7 @@ function copyFolderSync(source, destination) {
 }
 
 function createFolder(path,options){
-    fs.mkdirSync(path,options);
+    fs.mkdirSync(path.toLowerCase(),options);
 }
 
 function removeFolder(path){
