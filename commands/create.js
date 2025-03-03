@@ -71,15 +71,17 @@ async function createProject(projectName, options) {
 
     // Copy only the needed template directory
     const templatePath = path.join(tempDir, '/app/'+template);  // Adjust path as needed
-    fs.mkdirSync(projectName);
+    //fs.mkdirSync(projectName);
     //fs.cpSync(templatePath, projectName, { recursive: true });
+    createFolder(projectName);
     copyFolderSync(templatePath, projectName);
 
     // update the project name in the package.json file
     updateProjectName(projectName);
 
     // Clean up temp directory
-    fs.rmSync(tempDir, { recursive: true, force: true });
+    //fs.rmSync(tempDir, { recursive: true, force: true });
+    removeFolder(tempDir);
 
     console.log('Installing dependencies...');
     execSync('npm install', { cwd: projectName, stdio: 'inherit' });
@@ -111,6 +113,14 @@ function copyFolderSync(source, destination) {
             fs.copyFileSync(srcFile, destFile);
         }
     });
+}
+
+function createFolder(path,options){
+    fs.mkdirSync(path,options);
+}
+
+function removeFolder(path){
+    fs.rmdirSync(path, { recursive: true, force: true });
 }
 
 async function updateProjectName(projectName) {
@@ -147,7 +157,8 @@ async function createComponent(componentName, targetPath) {
 
     // check if the target path exists, create if it doesn't
     if (!fs.existsSync(targetPath)) {
-        fs.mkdirSync(targetPath, { recursive: true });
+        //fs.mkdirSync(targetPath, { recursive: true });
+        createFolder(targetPath, { recursive: true });
 
         // Create temporary directory
         const tempDir = 'temp-' + Math.random().toString(36).slice(2, 11);
@@ -159,10 +170,12 @@ async function createComponent(componentName, targetPath) {
 
         // Copy only the needed template directory
         const repoPath = path.join(tempDir, 'component/blank');  // Adjust path as needed
-        fs.cpSync(repoPath, targetPath, { recursive: true });
+        //fs.cpSync(repoPath, targetPath, { recursive: true });
+        copyFolderSync(repoPath, targetPath);
 
         // Clean up temp directory
-        fs.rmSync(tempDir, { recursive: true, force: true });
+        //fs.rmSync(tempDir, { recursive: true, force: true });
+        removeFolder(tempDir);
 
         renameGeneratedComponent(componentName, targetPath);
 
@@ -193,8 +206,9 @@ function renameGeneratedComponent(componentName, targetPath) {
     const tsContent = fs.readFileSync(tsFile, 'utf8');
 
     const updatedContent = tsContent
-        .replaceAll('{name}', componentName)
-        .replaceAll('{lower-name}', componentName.toLowerCase());
+        .replace(/{name}/g, componentName)
+        .replace(/{lower-name}/g, componentName.toLowerCase());
+
         
     fs.writeFileSync(tsFile, updatedContent);
 }
