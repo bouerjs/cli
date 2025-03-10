@@ -83,9 +83,8 @@ async function createProject(projectName, options) {
   );
 
   // Copy only the needed template directory
-  const templatePath = path.join(tempDir, 'app' + template);  // Adjust path as needed
-  //fs.mkdirSync(projectName);
-  //fs.cpSync(templatePath, projectName, { recursive: true });
+  const templatePath = path.join(tempDir, 'app', template);  // Adjust path as needed
+
   createFolder(projectName);
   copyFolderSync(templatePath, projectName);
 
@@ -184,7 +183,7 @@ async function createComponent(componentName, targetPath) {
     );
 
     // Copy only the needed template directory
-    const repoPath = path.join(tempDir, 'component/blank');  // Adjust path as needed
+    const repoPath = path.join(tempDir, 'component', 'blank');  // Adjust path as needed
     //fs.cpSync(repoPath, targetPath, { recursive: true });
     copyFolderSync(repoPath, targetPath);
 
