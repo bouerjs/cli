@@ -9,6 +9,8 @@ const ElementInjectorPlugin = require('./plugins/element-injector-plugin');
 module.exports = (env, argv) => {
   const regex_nm = /node_modules/;
   const isProd = env.NODE_ENV === 'production' || argv.mode === 'production';
+
+  const projectPath = argv.projectPath || env.projectPath || process.cwd();
   const port  = argv.port || 8080;
 
   const optionsBuilder = ext => {
@@ -19,7 +21,7 @@ module.exports = (env, argv) => {
   };
 
   return {
-    entry: path.resolve(__dirname, 'src', 'index.ts'),
+    entry: path.resolve(projectPath, 'src', 'index.ts'),
     devtool: isProd ? undefined : 'inline-source-map',
     plugins: [
       new HtmlWebpackPlugin({
@@ -31,7 +33,7 @@ module.exports = (env, argv) => {
       })
     ],
     output: {
-      path: path.resolve(__dirname, 'dist'),
+      path: path.resolve(projectPath, 'dist'),
       filename: 'main.js',
       clean: true
     },
@@ -50,7 +52,7 @@ module.exports = (env, argv) => {
               options: optionsBuilder('html'),
             }
           ],
-          exclude: [regex_nm, path.resolve(__dirname, 'src', 'index.html')],
+          exclude: [regex_nm, path.resolve(projectPath, 'src', 'index.html')],
         },
         { // Processing `css` files
           test: /\.css$/,
@@ -111,7 +113,7 @@ module.exports = (env, argv) => {
       setupMiddlewares: (middlewares, devServer) => {
         devServer.app.use((req, res, next) => {
           if (!req.route) {
-            res.sendFile(path.join(__dirname, 'index.html'));
+            res.sendFile(path.join(projectPath, 'index.html'));
           } else {
             next();
           }

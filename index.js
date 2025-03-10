@@ -3,7 +3,7 @@
 const { Command } = require('commander');
 const registerCommands = require('./commands');
 
-const program = new Command();
+const program = new Command('bouer');
 
 // Set version
 program.version(require('./package.json').version, '-v, --version');

@@ -1,17 +1,23 @@
+<p align="center"><a href="https://bouerjs.github.io" target="_blank" rel="noopener noreferrer"><img height="120px" src="https://afonsomatelias.github.io/assets/bouer/img/long.png" /></a></p>
+
+
 # Bouer CLI
 
 Command Line Interface (CLI) for [Bouer.js](https://bouerjs.github.io) - A JavaScript Library for building user interfaces.
 
 ## Table of Contents
-- [Installation](#installation)
-- [Available Commands](#available-commands)
-  - [Create New Project](#create-new-project)
-  - [Run Development Server](#run-development-server)
-  - [Install Dependencies](#install-dependencies)
-  - [Build Project](#build-project)
-- [Development](#development)
-- [Contributing](#contributing)
-- [License](#license)
+- [Bouer CLI](#bouer-cli)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Features](#features)
+  - [Available Commands](#available-commands)
+    - [Basic Commands](#basic-commands)
+    - [Create New Project](#create-new-project)
+    - [Run Development Server](#run-development-server)
+    - [Install Dependencies](#install-dependencies)
+    - [Build Project](#build-project)
+  - [Development](#development)
+  - [License](#license)
 
 ## Installation
 
@@ -36,6 +42,7 @@ npm install -g bouer-cli
 - `bouer install` - Installs dependencies for the current Bouer.js project
 - `bouer create new <project-name> [-t, --template <type>]` - Create a new Bouer.js project with optional template type (blank or routing)
 - `bouer create component <component-name> [-p, --path <path>]` - Create a new component in the current project
+- `bouer create config` - Generates webpack.config.js based con cli webpack config file
 - `bouer run` - Runs the development live server for the current Bouer.js project
 - `bouer build [-m, --mode <mode>]` - Builds the Bouer.js project for development or production (dev or prod)
 
@@ -105,5 +112,3 @@ npm link
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-
