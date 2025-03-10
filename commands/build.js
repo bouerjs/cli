@@ -21,10 +21,10 @@ module.exports = function buildCommand(program) {
 
                 if (buildMode === 'dev') {
                     console.log('Building project for development...');
-                    execSync('npm run build', { stdio: 'inherit' });
+                    execSync('npx webpack --mode development', { stdio: 'inherit' });
                 } else if (buildMode === 'prod') {
                     console.log('Building project for production...');
-                    execSync('npm run publish', { stdio: 'inherit' });
+                    execSync('npx webpack --mode production', { stdio: 'inherit' });
                 }
 
                 console.log('Build completed successfully!');
