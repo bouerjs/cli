@@ -64,7 +64,7 @@ module.exports = (env, argv) => {
 
 function execute(command, commandOptions) {
 
-  let configHandlerResponse = {
+  let tempConfigResponse = {
     cleanup: () => { }
   };
 
@@ -90,10 +90,10 @@ function execute(command, commandOptions) {
   // 3. If the mix-config option is provided, merge the project webpack.config.js file with the cli webpack.config.js file
   else if (fs.existsSync(projectWebpackConfigPath) && commandOptions.mixConfig) {
     // Use temporaty webpack config if mix-config is provided, otherwise use the `webpackConfigToUse` provided
-    configHandlerResponse = tempConfigHandler(commandOptions);
+    tempConfigResponse = tempConfigHandler(commandOptions);
 
     // Add the ars arguments
-    $commandArgs.push('--config', configHandlerResponse.configPath);
+    $commandArgs.push('--config', tempConfigResponse.configPath);
   }
   // 4. If the mix-config option is not provided, use the project webpack.config.js file
   else {
@@ -108,7 +108,7 @@ function execute(command, commandOptions) {
   ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGQUIT'].forEach((signal) => {
     process.on(signal, () => {
       $execution.kill(signal); // Send SIGINT to Webpack process
-      configHandlerResponse.cleanup();
+      tempConfigResponse.cleanup();
       process.exit(0);
     });
   });
