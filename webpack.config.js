@@ -101,10 +101,10 @@ module.exports = (env, argv) => {
       ],
     } : {},
     watchOptions: {
-      ignored: '**/node_modules',
+      ignored: regex_nm,
     },
     devServer: {
-      port: 8080,
+      port: port,
       historyApiFallback: true,
       hot: true,
 
