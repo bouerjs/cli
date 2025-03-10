@@ -1,3 +1,6 @@
+<p align="center"><a href="https://bouerjs.github.io" target="_blank" rel="noopener noreferrer"><img height="120px" src="https://afonsomatelias.github.io/assets/bouer/img/long.png" /></a></p>
+
+
 # Bouer CLI
 
 Command Line Interface (CLI) for [Bouer.js](https://bouerjs.github.io) - A JavaScript Library for building user interfaces.
@@ -109,5 +112,3 @@ npm link
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-
