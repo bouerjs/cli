@@ -39,7 +39,21 @@ module.exports = function createCommand(program) {
       }
     });
 
+    // Subcommand for webpack config
+  create
+    .command('config')
+    .description('Generates a new webpack.config.js for the project according to the cli config')
+    .action(async () => {
+      try {
+        createWebpackConfig();
+      } catch (error) {
+        console.error('Error:', error.message);
+        process.exit(1);
+      }
+    });
 };
+
+// Project creation
 
 async function createProject(projectName, options) {
   const git = simpleGit();
@@ -69,7 +83,7 @@ async function createProject(projectName, options) {
   );
 
   // Copy only the needed template directory
-  const templatePath = path.join(tempDir, '/app/' + template);  // Adjust path as needed
+  const templatePath = path.join(tempDir, 'app' + template);  // Adjust path as needed
   //fs.mkdirSync(projectName);
   //fs.cpSync(templatePath, projectName, { recursive: true });
   createFolder(projectName);
@@ -91,7 +105,7 @@ Dependencies installed.
 
 Get started with:
 cd ${projectName}
-bouer run
+npm start | bouer run
 Access your app at: http://127.0.0.1:8080
     `);
 
@@ -138,6 +152,8 @@ async function updateProjectName(projectName) {
     JSON.stringify(packageJson, null, 2) + '\n'  // 2 spaces indentation + trailing newline
   );
 }
+
+// Component creation
 
 async function createComponent(componentName, targetPath) {
 
@@ -210,4 +226,27 @@ function renameGeneratedComponent(componentName, targetPath) {
 
 
   fs.writeFileSync(tsFile, updatedContent);
+}
+
+// Webpack config creation
+function createWebpackConfig() {
+  const cliWebpackConfigPath = path.join(__dirname, '..', 'webpack.config.js');
+  let content = fs.readFileSync(cliWebpackConfigPath, 'utf8');  
+  
+  const splitted = content.split('\n');
+  const line = splitted.findIndex(x => x.includes('const projectPath'));
+  splitted[line] = splitted[line].split('=')[0] + `= __dirname;`;
+
+  content = splitted.join('\n');
+
+  try {
+    console.log('Generating webpack.config.js file ⌛...');
+    fs.writeFileSync(path.join(process.cwd(), 'webpack.config.js'), content, 'utf8');
+    console.log('webpack.config.js successfully generated ✅...');
+    
+  } catch (error) {
+    console.error('Error: Could not create webpack.config.js file.');
+    console.error('Error:', error.message);
+    process.exit(1);
+  }
 }
