@@ -136,7 +136,7 @@ function createFolder(path, options) {
 }
 
 function removeFolder(path) {
-  fs.rmdirSync(path, { recursive: true, force: true });
+  fs.rmSync(path, { recursive: true, force: true });
 }
 
 async function updateProjectName(projectName) {
