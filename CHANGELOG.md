@@ -1,4 +1,4 @@
-# v0.9.1
+# v0.9.0
 [2025-03-11]
 
 ### Features
@@ -15,6 +15,7 @@
 * fix: deps updated ([`670b5ab`](https://github.com/bouerjs/cli/commit/670b5abe1ef749b8f55c34c0360da67b54b27cef))
 * fix: added --mode in the command ([`ea28739`](https://github.com/bouerjs/cli/commit/ea287397a09372ba0d3431e14f95fb0cc114fd6c))
 * fix: fixed the missing link attributes ([`101081d`](https://github.com/bouerjs/cli/commit/101081d66dd08edf0bc78787be069883180efb7e))
+* fix: CLI version updated ([`e6adf55`](https://github.com/bouerjs/cli/commit/e6adf5572e435dc7a328634c334288b3c6af1bbd))
 * fix: Sass loader package upgraded ([`1f87fa3`](https://github.com/bouerjs/cli/commit/1f87fa38f37dd2d98d682b8d905bc077e723bfb2))
 
 # v0.8.4
