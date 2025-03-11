@@ -42,10 +42,11 @@ module.exports = function createCommand(program) {
     // Subcommand for webpack config
   create
     .command('config')
+    .option('--preview', 'Used to preview the configuration instead of create it')
     .description('Generates a new webpack.config.js for the project according to the cli config')
-    .action(async () => {
+    .action(async (options) => {
       try {
-        createWebpackConfig();
+        createWebpackConfig(options);
       } catch (error) {
         console.error('Error:', error.message);
         process.exit(1);
@@ -228,7 +229,7 @@ function renameGeneratedComponent(componentName, targetPath) {
 }
 
 // Webpack config creation
-function createWebpackConfig() {
+function createWebpackConfig(options) {
   const cliWebpackConfigPath = path.join(__dirname, '..', 'webpack.config.js');
   let content = fs.readFileSync(cliWebpackConfigPath, 'utf8');  
   
@@ -237,6 +238,11 @@ function createWebpackConfig() {
   splitted[line] = splitted[line].split('=')[0] + `= __dirname;`;
 
   content = splitted.join('\n');
+
+  if ('preview' in options) {
+    console.log("\n\n");
+    return console.log(content);
+  }
 
   try {
     console.log('Generating webpack.config.js file ⌛...');
