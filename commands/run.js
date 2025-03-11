@@ -20,11 +20,12 @@ module.exports = function runCommand(program) {
         }
 
         const port = options.port ? ('--port ' + options.port) : '';
-        execute(`npx webpack serve development ${ port }`, options);
+        execute(`npx webpack serve --mode development ${ port }`, options);
       } catch (error) {
         if (error.status === 'ENOENT') {
           console.error('Error: The "webpack serve" command failed. Make sure webpack-dev-server is installed and configured properly.');
         } else {
+          console.log(error)
           console.error('Error:', error.message);
         }
         process.exit(1);
