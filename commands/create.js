@@ -1,7 +1,9 @@
 const simpleGit = require('simple-git');
 const path = require('path');
+const os = require('os');
 const fs = require('fs');
 const { execSync } = require('child_process');
+require("colors");
 
 const repoUrl = 'https://github.com/bouerjs/templates.git'
 
@@ -20,7 +22,7 @@ module.exports = function createCommand(program) {
       try {
         createProject(projectName, options);
       } catch (error) {
-        console.error('Error:', error.message);
+        console.error('Error:'.red, error.message);
         process.exit(1);
       }
     });
@@ -34,12 +36,12 @@ module.exports = function createCommand(program) {
       try {
         createComponent(componentName, options.path);
       } catch (error) {
-        console.error('Error:', error.message);
+        console.error('Error:'.red, error.message);
         process.exit(1);
       }
     });
 
-    // Subcommand for webpack config
+  // Subcommand for webpack config
   create
     .command('config')
     .option('--preview', 'Used to preview the configuration instead of create it')
@@ -48,7 +50,7 @@ module.exports = function createCommand(program) {
       try {
         createWebpackConfig(options);
       } catch (error) {
-        console.error('Error:', error.message);
+        console.error('Error:'.red, error.message);
         process.exit(1);
       }
     });
@@ -57,26 +59,23 @@ module.exports = function createCommand(program) {
 // Project creation
 
 async function createProject(projectName, options) {
-  const git = simpleGit();
-
   const template = options.template.toLowerCase();
 
   // Validate template type
   if (!['blank', 'routing'].includes(template)) {
-    console.error('Invalid template. Please use either "blank" or "routing"');
+    console.error('Invalid template. '.red + ' Please use either "blank" or "routing"');
     process.exit(1);
   }
 
-  console.log(`Creating new ${template} project: ${projectName}`);
+  console.log(`Creating new ${template.yellow} project: ${projectName.green}`);
 
   // Check if directory already exists
   if (fs.existsSync(projectName)) {
-    console.error(`Error: Directory ${projectName} already exists`);
+    console.error(`Error:`.red + ` Directory ${projectName} already exists`);
     process.exit(1);
   }
 
-  // Create temporary directory
-  const tempDir = 'temp-' + Math.random().toString(36).slice(2, 11);
+  const tempDir = path.join(os.tmpdir(), 'temp-' + Math.random().toString(36).slice(2, 11));
 
   // Clone the specific branch/directory
   await simpleGit().clone(
@@ -92,26 +91,29 @@ async function createProject(projectName, options) {
   // update the project name in the package.json file
   updateProjectName(projectName);
 
-  // Clean up temp directory
-  //fs.rmSync(tempDir, { recursive: true, force: true });
-  removeFolder(tempDir);
+  try {
+    // Clean up temp directory
+    removeFolder(tempDir);
+  } catch (error) {
+    // In case of erro just leave it
+  }
 
   console.log('Installing dependencies...');
   execSync('npm install', { cwd: projectName, stdio: 'inherit' });
 
   console.log(`
-Successfully created project ${projectName}
+Successfully created project ${projectName.green}
 Dependencies installed.
 
 Get started with:
-cd ${projectName}
-npm start | bouer run
+cd ${projectName.green}
+${'npm'.blue} start | ${'bouer'.blue} run
 Access your app at: http://127.0.0.1:8080
-    `);
+`);
 
 }
 
-function copyFolderSync(source, destination) {
+function copyFolderSync(source, destination, cb) {
   if (!fs.existsSync(destination)) {
     fs.mkdirSync(destination, { recursive: true });
   }
@@ -121,9 +123,10 @@ function copyFolderSync(source, destination) {
     const destFile = path.join(destination, file);
 
     if (fs.lstatSync(srcFile).isDirectory()) {
-      copyFolderSync(srcFile, destFile);
+      copyFolderSync(srcFile, destFile, cb);
     } else {
       fs.copyFileSync(srcFile, destFile);
+      if (typeof cb === 'function') cb(srcFile, destFile)
     }
   });
 }
@@ -154,29 +157,35 @@ async function updateProjectName(projectName) {
 }
 
 // Component creation
-
 async function createComponent(componentName, targetPath) {
+
+  componentName = componentName.trim(); // Removing any space
+  // Making the first letter of the component name upper. Ex: home => Home 
+  componentName = componentName[0].toUpperCase() + componentName.substring(1);
 
   const packagePath = path.join(process.cwd(), 'package.json');
   if (!fs.existsSync(packagePath)) {
-    console.error('Error: No package.json found. Make sure you are in a Bouer.js project directory.');
+    console.error('Error:'.red + ' No package.json found. Make sure you are in a Bouer.js project directory.');
     process.exit(1);
   }
 
   // Check if path exists, create if it doesn't
   if (targetPath !== './') {
-    targetPath = 'src/' + targetPath + '/' + componentName;
+    targetPath = path.join('src', targetPath, componentName.toLowerCase());
   } else {
-    targetPath = 'src/' + componentName;
+    targetPath = path.join('src', componentName.toLowerCase());
   }
 
   // check if the target path exists, create if it doesn't
   if (!fs.existsSync(targetPath)) {
+    console.log('');
+    console.log(`Scaffolding ${componentName.green} in ${targetPath.yellow}...`);
+
     //fs.mkdirSync(targetPath, { recursive: true });
     createFolder(targetPath, { recursive: true });
 
     // Create temporary directory
-    const tempDir = 'temp-' + Math.random().toString(36).slice(2, 11);
+    const tempDir = path.join(os.tmpdir(), 'temp-' + Math.random().toString(36).slice(2, 11));
 
     // Clone the specific branch/directory
     await simpleGit().clone(
@@ -194,10 +203,12 @@ async function createComponent(componentName, targetPath) {
 
     renameGeneratedComponent(componentName, targetPath);
 
-    console.log(`Component ${componentName} created successfully in ${targetPath}`);
+    const colorizedName = (componentName + 'Component').green;
 
+    console.log(`Component ${componentName.green} created successfully in ${targetPath.yellow}`);
+    console.log(`Make sure to add the ${ colorizedName } to: { components: [${ colorizedName }] } or in { children: [${ colorizedName }] }`)
   } else {
-    console.log(`Component ${componentName} already exists in ${targetPath}`);
+    console.log(`Component ${componentName.yellow} already exists in ${targetPath.yellow}`);
   }
 
 }
@@ -213,11 +224,12 @@ function renameGeneratedComponent(componentName, targetPath) {
         path.join(targetPath, `${ext}.tmp`),
         path.join(targetPath, `${componentNameLower}.${ext}`)
       );
+      console.log(' + '.green + `${componentNameLower}.${ext}`.yellow + ' created');
     }
   });
 
   // update the ts file
-  const tsFile = targetPath + '/' + componentName + '.ts';
+  const tsFile = path.join(targetPath, componentName + '.ts');
   const tsContent = fs.readFileSync(tsFile, 'utf8');
 
   const updatedContent = tsContent
@@ -231,8 +243,8 @@ function renameGeneratedComponent(componentName, targetPath) {
 // Webpack config creation
 function createWebpackConfig(options) {
   const cliWebpackConfigPath = path.join(__dirname, '..', 'webpack.config.js');
-  let content = fs.readFileSync(cliWebpackConfigPath, 'utf8');  
-  
+  let content = fs.readFileSync(cliWebpackConfigPath, 'utf8');
+
   const splitted = content.split('\n');
   const line = splitted.findIndex(x => x.includes('const projectPath'));
   splitted[line] = splitted[line].split('=')[0] + `= __dirname;`;
@@ -245,13 +257,13 @@ function createWebpackConfig(options) {
   }
 
   try {
-    console.log('Generating webpack.config.js file ⌛...');
+    console.log('Generating ' + 'webpack.config.js'.yellow + ' file...');
     fs.writeFileSync(path.join(process.cwd(), 'webpack.config.js'), content, 'utf8');
-    console.log('webpack.config.js successfully generated ✅...');
-    
+    console.log('webpack.config.js'.green + ' successfully generated...');
+
   } catch (error) {
-    console.error('Error: Could not create webpack.config.js file.');
-    console.error('Error:', error.message);
+    console.error('Error:'.red + 'Could not create webpack.config.js file.');
+    console.error('Error:'.red, error.message);
     process.exit(1);
   }
 }

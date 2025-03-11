@@ -41,7 +41,7 @@ module.exports = (env, argv) => {
 };`;
 
   const runtimeConfigName = 'runtime.webpack.config.js';
-  console.log(`Generating temporary ${runtimeConfigName} file...`);
+  console.log(`Generating temporary ${runtimeConfigName.yellow} file...`);
 
   // writing the merged config to a temporary file
   const runtimeConfigPath = path.join(process.cwd(), runtimeConfigName);
@@ -51,10 +51,10 @@ module.exports = (env, argv) => {
   return {
     configPath: runtimeConfigPath,
     cleanup: () => {
-      console.log(`Cleaning up ${runtimeConfigName} file...`);
+      console.log(`Cleaning up ${runtimeConfigName.yellow} file...`);
       fs.unlink(runtimeConfigPath, (err) => {
         if (err) {
-          console.error('Error: Could not delete the temporary webpack config file.', runtimeConfigPath);
+          console.error('Error:'.red + ' Could not delete the temporary webpack config file.', runtimeConfigPath);
           throw err;
         }
       });
@@ -97,7 +97,7 @@ function execute(command, commandOptions) {
   }
   // 4. If the mix-config option is not provided, use the project webpack.config.js file
   else {
-    console.log('Using the cli webpack.config.js file, if this is not what you wanted check running command...');
+    console.log('Using the cli ' + 'webpack.config.js'.yellow + ' file, if this is not what you wanted check running command...');
     $commandArgs.push('--config', cliWebpackConfigPath);
   }
 
