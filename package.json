@@ -1,6 +1,6 @@
 {
   "name": "bouer-cli",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Command Line Interface (CLI) for bouerjs",
   "main": "index.js",
   "bin": {
@@ -74,7 +74,7 @@
     "indent.js": "^0.3.5",
     "js-beautify": "^1.14.7",
     "sass": "^1.85.1",
-    "sass-loader": "^13.3.3",
+    "sass-loader": "^16.0.5",
     "simple-git": "^3.27.0",
     "style-loader": "^3.3.4",
     "terser": "^5.9.0",
