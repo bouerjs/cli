@@ -11,7 +11,7 @@ module.exports = (env, argv) => {
   const isProd = env.NODE_ENV === 'production' || argv.mode === 'production';
 
   const projectPath = argv.projectPath || env.projectPath || process.cwd();
-  const port  = argv.port || 8080;
+  const port = argv.port || 8080;
 
   const optionsBuilder = ext => {
     return {
@@ -29,6 +29,7 @@ module.exports = (env, argv) => {
         filename: 'index.html',
       }),
       new ElementInjectorPlugin({
+        attrs: [{ name: 'rel', value: "stylesheet" }, { name: 'type', value: "text/css" }],
         filename: 'main.css',
       })
     ],
