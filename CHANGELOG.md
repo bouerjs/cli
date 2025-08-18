@@ -1,5 +1,5 @@
 # v0.9.0
-[2025-03-10]
+[2025-03-11]
 
 ### Features
 
@@ -7,22 +7,19 @@
 * feat: command executor, used for perform commands selecting the right webpack.config.js to use ([`657c6da`](https://github.com/bouerjs/cli/commit/657c6dac46612f6fef14e792662756f855687f71))
 * feat: added executor function in build and run commands ([`05c53da`](https://github.com/bouerjs/cli/commit/05c53daf6aa3c22bcd8e52a4a5c3bc5b15188696))
 * feat: added webpack.config.js file generation in create command ([`57c4db5`](https://github.com/bouerjs/cli/commit/57c4db590d33e9d6c30f5e032dbbf267107f8098))
+* feat: added configuration preview in bouer create config command ([`d412f72`](https://github.com/bouerjs/cli/commit/d412f7287e5dfa96a1f4a5f43abc613a8426580c))
 * feat: ajusted it to deal with current project path or provided path ([`93d428f`](https://github.com/bouerjs/cli/commit/93d428f612eabcdf27672dee85f54b01034705ae))
 
 ### Fixes
 
 * fix: deps updated ([`670b5ab`](https://github.com/bouerjs/cli/commit/670b5abe1ef749b8f55c34c0360da67b54b27cef))
-
+* fix: added --mode in the command ([`ea28739`](https://github.com/bouerjs/cli/commit/ea287397a09372ba0d3431e14f95fb0cc114fd6c))
+* fix: fixed the missing link attributes ([`101081d`](https://github.com/bouerjs/cli/commit/101081d66dd08edf0bc78787be069883180efb7e))
+* fix: CLI version updated ([`e6adf55`](https://github.com/bouerjs/cli/commit/e6adf5572e435dc7a328634c334288b3c6af1bbd))
+* fix: Sass loader package upgraded ([`1f87fa3`](https://github.com/bouerjs/cli/commit/1f87fa38f37dd2d98d682b8d905bc077e723bfb2))
 
 # v0.8.4
 [2025-02-27]
 
-
-
-
 # v0.6.1
 [2025-02-20]
-
-
-
-
