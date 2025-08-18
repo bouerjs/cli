@@ -8,7 +8,8 @@ const ElementInjectorPlugin = require('./plugins/element-injector-plugin');
 
 module.exports = (env, argv) => {
   const regex_nm = /node_modules/;
-  const isProd = env.NODE_ENV === 'production' || argv.mode === 'production';
+  const mode = argv.mode;
+  const isProd = env.NODE_ENV === 'production' || mode === 'production';
 
   const projectPath = argv.projectPath || env.projectPath || process.cwd();
   const port = argv.port || 8080;
@@ -23,6 +24,7 @@ module.exports = (env, argv) => {
   return {
     entry: path.resolve(projectPath, 'src', 'index.ts'),
     devtool: isProd ? undefined : 'inline-source-map',
+    mode: mode ?? isProd ? 'production' : 'development',
     plugins: [
       new HtmlWebpackPlugin({
         template: './src/index.html',
@@ -102,7 +104,7 @@ module.exports = (env, argv) => {
           test: /\.js(\?.*)?$/i,
         }),
       ],
-    } : {},
+    } : { minimize: false },
     watchOptions: {
       ignored: regex_nm,
     },
