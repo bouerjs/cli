@@ -33,7 +33,7 @@
       "view": "html",
       "style": "css",
       "script": "ts",
-      "$types": {
+      "templates": {
         "blank": {
           "path": "components",
           "suffix": ""
