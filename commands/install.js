@@ -1,10 +1,11 @@
-const path = require('path');
-const fs = require('fs');
-const { execSync } = require('child_process');
+import path from 'path';
+import fs from 'fs';
+import { execSync } from 'child_process';
 
-module.exports = function installCommand(program) {
+export default function installCommand(program) {
   program
     .command('install')
+    .alias('i')
     .description('Installs dependencies for the current Bouer.js project')
     .action(() => {
       try {
@@ -24,5 +25,5 @@ module.exports = function installCommand(program) {
         process.exit(1);
       }
     }
-    );
+  );
 }; 
