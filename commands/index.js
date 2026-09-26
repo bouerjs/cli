@@ -1,9 +1,9 @@
-const createCommand = require('./create');
-const buildCommand = require('./build');
-const runCommand = require('./run');
-const installCommand = require('./install');
+import createCommand from './create.js';
+import buildCommand from './build.js';
+import runCommand from './run.js';
+import installCommand from './install.js';
 
-module.exports = function registerCommands(program) {
+export default function registerCommands(program) {
   createCommand(program);
   buildCommand(program);
   runCommand(program);
