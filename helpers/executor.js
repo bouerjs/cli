@@ -1,10 +1,14 @@
-const path = require('path');
-const fs = require('fs');
-const { spawn } = require('child_process');
+import path from 'path';
+import fs from 'fs';
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'node:url';
+import 'colors';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const cliWebpackConfigPath = path.join(__dirname, '..', 'webpack.config.js');
 const projectWebpackConfigPath = path.join(process.cwd(), 'webpack.config.js');
-
 
 function tempConfigHandler(options) {
   const mixConfig = options.mixConfig;
@@ -116,6 +120,6 @@ function execute(command, commandOptions) {
   return $execution;
 }
 
-module.exports = {
+export {
   execute
 };
