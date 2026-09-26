@@ -239,8 +239,8 @@ async function createComponent(componentName, targetPath, type) {
 function renameGeneratedComponent(cliScaffoldConfig, componentName, targetPath, type) {
 
   const files = fs.readdirSync(path.join(targetPath));
-  const $type = cliScaffoldConfig.templates[type];
-  const suffix = ($type.suffix || '').trim();
+  const template = cliScaffoldConfig.templates[type];
+  const suffix = (template.suffix || '').trim();
 
   files.forEach(filepath => {
     // get the file
