@@ -1,10 +1,8 @@
-const path = require('path');
-const fs = require('fs');
-const { spawn } = require('child_process');
-const { execute } = require('../helpers/executor');
+import path from 'path';
+import fs from 'fs';
+import { execute } from '../helpers/executor.js';
 
-
-module.exports = function runCommand(program) {
+export default function runCommand(program) {
   program
     .command('run')
     .description('Runs the development live server for the current Bouer.js project')
