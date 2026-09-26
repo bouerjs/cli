@@ -1,0 +1,56 @@
+{
+  "project": {
+    "version": "3.3.0",
+    "context": "src",
+    "entry": "./app.ts",
+    "build": {
+      "index": "index.html",
+      "outputPath": "dist",
+      "assets": [
+        "assets",
+        "favicon.ico"
+      ],
+      "development": {
+        "filename": "app",
+        "hash": "none",
+        "tsConfig": "tsconfig.json",
+        "minimize": false,
+        "splitChunks": true,
+        "devtool": "eval-cheap-module-source-map"
+      },
+      "production": {
+        "filename": "chunk",
+        "hash": "[contenthash:8]",
+        "tsConfig": "tsconfig.json",
+        "minimize": true,
+        "splitChunks": true,
+        "devtool": false
+      }
+    }
+  },
+  "cli": {
+    "scaffold": {
+      "view": "html",
+      "style": "css",
+      "script": "ts",
+      "$types": {
+        "blank": {
+          "path": "components",
+          "suffix": ""
+        },
+        "page": {
+          "path": "pages",
+          "suffix": ""
+        }
+      }
+    },
+    "server": {
+      "hot": true,
+      "port": 8080,
+      "staticDir": "src",
+      "publicPath": "/",
+      "compress": true,
+      "openBrowser": false
+    }
+  }
+}
