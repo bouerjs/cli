@@ -8,6 +8,7 @@ import 'colors';
 export default function buildCommand(program) {
   program
     .command('build')
+    .alias('b')
     .description('Builds the Bouer.js project for development or production')
     .option('-m, --mode <mode>', 'Build mode (dev or prod)', 'dev')
     .option('--mix-config <config-path>', 'The other webpack.config.js path that need to mixed to', '')
