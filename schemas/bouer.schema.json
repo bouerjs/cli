@@ -1,0 +1,289 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bouer Configuration",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "object",
+      "description": "The project configuration.",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "The version of Bouer used by the project.",
+          "default": "3.3.0"
+        },
+        "context": {
+          "type": "string",
+          "description": "The root directory of the project source files.",
+          "default": "src"
+        },
+        "entry": {
+          "type": "string",
+          "description": "The entry point of the application relative to the project context.",
+          "default": "./app.ts"
+        },
+        "build": {
+          "type": "object",
+          "description": "The build configuration for the project.",
+          "properties": {
+            "index": {
+              "type": "string",
+              "description": "The HTML file used as the application's entry document.",
+              "default": "index.html"
+            },
+            "outputPath": {
+              "type": "string",
+              "description": "The directory where the generated build files are placed.",
+              "default": "dist"
+            },
+            "assets": {
+              "type": "array",
+              "description": "A list of files and directories that should be copied to the build output without being processed.",
+              "items": {
+                "type": "string"
+              },
+              "default": [
+                "assets",
+                "favicon.ico"
+              ]
+            },
+            "development": {
+              "$ref": "#/$defs/buildEnvironment",
+              "description": "Configuration options used when building the project in development mode.",
+              "default": {
+                "filename": "app",
+                "hash": "none",
+                "tsConfig": "tsconfig.json",
+                "minimize": false,
+                "splitChunks": true,
+                "devtool": "eval-cheap-module-source-map",
+                "wpackMixConfig": ""
+              }
+            },
+            "production": {
+              "$ref": "#/$defs/buildEnvironment",
+              "description": "Configuration options used when building the project for production.",
+              "default": {
+                "filename": "app",
+                "hash": "[contenthash:8]",
+                "tsConfig": "tsconfig.json",
+                "minimize": true,
+                "splitChunks": true,
+                "devtool": false,
+                "wpackMixConfig": ""
+              }
+            }
+          },
+          "required": [
+            "index",
+            "outputPath",
+            "assets",
+            "development",
+            "production"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "version",
+        "context",
+        "entry",
+        "build"
+      ],
+      "additionalProperties": false
+    },
+    "cli": {
+      "type": "object",
+      "description": "The CLI configuration for the project.",
+      "properties": {
+        "scaffold": {
+          "type": "object",
+          "description": "Configuration for generating project files and components using the Bouer CLI.",
+          "properties": {
+            "view": {
+              "type": "string",
+              "description": "The default file type used for component views.",
+              "enum": [
+                "html"
+              ],
+              "default": "html"
+            },
+            "style": {
+              "type": "string",
+              "description": "The default stylesheet language used when generating components.",
+              "enum": [
+                "css",
+                "scss",
+                "sass",
+                "less"
+              ],
+              "default": "css"
+            },
+            "script": {
+              "type": "string",
+              "description": "The default scripting language used when generating components.",
+              "enum": [
+                "js",
+                "ts"
+              ],
+              "default": "ts"
+            },
+            "templates": {
+              "type": "object",
+              "description": "Custom scaffold templates that define where generated files are placed and how their names are suffixed.",
+              "additionalProperties": {
+                "$ref": "#/$defs/scaffoldType"
+              },
+              "default": {
+                "blank": {
+                  "path": "components",
+                  "suffix": ""
+                },
+                "page": {
+                  "path": "pages",
+                  "suffix": ""
+                }
+              },
+              "required": [
+                "blank",
+                "page"
+              ]
+            }
+          },
+          "required": [
+            "view",
+            "style",
+            "script",
+            "templates"
+          ],
+          "additionalProperties": false
+        },
+        "server": {
+          "type": "object",
+          "description": "Configuration for the Bouer development server.",
+          "properties": {
+            "hot": {
+              "type": "boolean",
+              "description": "Enables Hot Module Replacement (HMR) so that changes can be reflected without fully reloading the application.",
+              "default": true
+            },
+            "port": {
+              "type": "integer",
+              "description": "The network port used by the development server.",
+              "minimum": 1,
+              "maximum": 65535,
+              "default": 8080
+            },
+            "staticDir": {
+              "type": "string",
+              "description": "The directory from which static files are served.",
+              "default": "src"
+            },
+            "publicPath": {
+              "type": "string",
+              "description": "The public URL path from which application assets are served.",
+              "default": "/"
+            },
+            "compress": {
+              "type": "boolean",
+              "description": "Enables compression for files served by the development server.",
+              "default": true
+            },
+            "openBrowser": {
+              "type": "boolean",
+              "description": "Automatically opens the application in the default browser when the development server starts.",
+              "default": false
+            }
+          },
+          "required": [
+            "hot",
+            "port",
+            "staticDir",
+            "publicPath",
+            "compress",
+            "openBrowser"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "scaffold",
+        "server"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "buildEnvironment": {
+      "type": "object",
+      "properties": {
+        "filename": {
+          "type": "string",
+          "description": "The base filename used for the generated bundle.",
+          "default": "app"
+        },
+        "hash": {
+          "type": "string",
+          "description": "The hash pattern used in generated filenames. Use 'none' to disable filename hashing or a Webpack hash placeholder such as '[contenthash:8]'.",
+          "default": "none"
+        },
+        "tsConfig": {
+          "type": "string",
+          "description": "The path to the TypeScript configuration file used for the build.",
+          "default": "tsconfig.json"
+        },
+        "minimize": {
+          "type": "boolean",
+          "description": "Whether the generated JavaScript and other assets should be minimized.",
+          "default": false
+        },
+        "splitChunks": {
+          "type": "boolean",
+          "description": "Whether Webpack should split shared dependencies and modules into separate chunks.",
+          "default": true
+        },
+        "devtool": {
+          "type": [
+            "string",
+            "boolean"
+          ],
+          "description": "The Webpack source map configuration. Set to false to disable source maps.",
+          "default": "eval-cheap-module-source-map"
+        },
+        "wpackMixConfig": {
+          "type": "string",
+          "description": "The path to a custom Webpack configuration file that is merged with the Bouer build configuration."
+        }
+      },
+      "required": [
+        "filename",
+        "hash",
+        "tsConfig",
+        "minimize",
+        "splitChunks",
+        "devtool"
+      ],
+      "additionalProperties": false
+    },
+    "scaffoldType": {
+      "type": "object",
+      "description": "Defines the configuration for a custom scaffold type.",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "The directory where files generated for this scaffold type are placed."
+        },
+        "suffix": {
+          "type": "string",
+          "description": "The suffix appended to the generated component or class name."
+        }
+      },
+      "required": [
+        "path",
+        "suffix"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
