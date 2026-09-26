@@ -1,68 +1,45 @@
-const simpleGit = require('simple-git');
-const path = require('path');
-const os = require('os');
-const fs = require('fs');
-const { execSync } = require('child_process');
-require("colors");
+import simpleGit from 'simple-git';
+import path from 'path';
+import os from 'os';
+import fs from 'fs';
+import { execSync, } from 'child_process';
+import { createRequire } from 'module';
+import projectConfigLoader from '../helpers/project-config-loader.js';
+import 'colors';
 
-const repoUrl = 'https://github.com/bouerjs/templates.git'
+const cwd = process.cwd();
+const require = createRequire(import.meta.url);
+const defaultBouerConfig = require('../default.bouer.json');
+const defaultBouerVersion = defaultBouerConfig.project.version;
 
-module.exports = function createCommand(program) {
-  const create = program
-    .command('create')
-    .description('Create a new Bouer.js project, component, or service');
+const templSuffix = 'templates-bouer-cli-';
+const repoUrl = 'https://github.com/bouerjs/templates.git';
 
-  // Subcommand for new project
-  create
-    .command('new <project-name>')
-    .description('Create a new Bouer.js project')
-    .option('-t, --template <type>', 'Template type (blank or routing)', 'blank')
-    .action(async (projectName, options) => {
+function getPathFromName(input) {
+  const parts = input.split('/');
+  const name = parts.pop();
+  const dir = parts.join('/');
 
-      try {
-        createProject(projectName, options);
-      } catch (error) {
-        console.error('Error:'.red, error.message);
-        process.exit(1);
-      }
-    });
+  return {
+    dir: dir,
+    name: name
+  };
+}
 
-  // Subcommand for component
-  create
-    .command('component <component-name>')
-    .description('Creates a new component')
-    .option('-p, --path <path>', 'Path to create the component (root: ./src)', './')
-    .action(async (componentName, options) => {
-      try {
-        createComponent(componentName, options.path);
-      } catch (error) {
-        console.error('Error:'.red, error.message);
-        process.exit(1);
-      }
-    });
-
-  // Subcommand for webpack config
-  create
-    .command('config')
-    .option('--preview', 'Used to preview the configuration instead of create it')
-    .description('Generates a new webpack.config.js for the project according to the cli config')
-    .action(async (options) => {
-      try {
-        createWebpackConfig(options);
-      } catch (error) {
-        console.error('Error:'.red, error.message);
-        process.exit(1);
-      }
-    });
-};
-
-// Project creation
+function getTemplatePath() {
+  return path.join(os.tmpdir(), templSuffix + new Date().toJSON().split('T')[0]);
+}
 
 async function createProject(projectName, options) {
+  if (!projectName) {
+    console.error('Error:'.red + ' Project name is required');
+    process.exit(1);
+  }
+
   const template = options.template.toLowerCase();
 
   // Validate template type
-  if (!['blank', 'routing'].includes(template)) {
+  if (!['blank', 'routing', 'ghpages'].includes(template)) {
     console.error('Invalid template. '.red + ' Please use either "blank" or "routing"');
     process.exit(1);
   }
@@ -75,45 +52,61 @@ async function createProject(projectName, options) {
     process.exit(1);
   }
 
-  const tempDir = path.join(os.tmpdir(), 'temp-' + Math.random().toString(36).slice(2, 11));
+  const templateDir = getTemplatePath();
+  let templatesLoaded = false;
 
-  // Clone the specific branch/directory
-  await simpleGit().clone(
-    repoUrl, tempDir, ['--depth', '1']  // Shallow clone for speed
-  );
-
-  // Copy only the needed template directory
-  const templatePath = path.join(tempDir, 'app', template);  // Adjust path as needed
-
-  createFolder(projectName);
-  copyFolderSync(templatePath, projectName);
-
-  // update the project name in the package.json file
-  updateProjectName(projectName);
 
   try {
-    // Clean up temp directory
-    removeFolder(tempDir);
+    if (!fs.existsSync(templateDir)) {
+      templatesLoaded = true
+      console.log('Loading the bouer templates...');
+      // Clone the specific branch/directory
+      await simpleGit().clone(
+        repoUrl, templateDir, ['--depth', '1']  // Shallow clone for speed
+      );
+    }
+
+    // Copy only the needed template directory
+    const templatePath = path.join(templateDir, defaultBouerVersion, 'app', template);  // Adjust path as needed
+
+    createFolder(projectName);
+    copyItemSync(templatePath, projectName);
+
+    // update the project name in the package.json file
+    await updateProjectName(projectName);
+
+    fs.writeFileSync(
+      path.join(cwd, projectName, 'bouer.json'),
+      JSON.stringify(defaultBouerConfig, null, 2),
+      'utf8'
+    );
+
+    console.log('Installing dependencies...');
+    execSync('npm install', { cwd: projectName, stdio: 'inherit' });
+
+    console.log(`
+  Successfully created project ${projectName.green}
+  Dependencies installed.
+  
+  Get started with:
+  cd ${projectName.green}
+  ${'npm'.blue} start | ${'bouer'.blue} run
+  Access your app at: http://127.0.0.1:8080
+  `);
+
   } catch (error) {
-    // In case of erro just leave it
+    console.error('Error creating project:'.red, error.message);
+  } finally {
+    if (templatesLoaded) cleanUp();
   }
-
-  console.log('Installing dependencies...');
-  execSync('npm install', { cwd: projectName, stdio: 'inherit' });
-
-  console.log(`
-Successfully created project ${projectName.green}
-Dependencies installed.
-
-Get started with:
-cd ${projectName.green}
-${'npm'.blue} start | ${'bouer'.blue} run
-Access your app at: http://127.0.0.1:8080
-`);
-
 }
 
-function copyFolderSync(source, destination, cb) {
+function copyItemSync(source, destination, cb) {
+  if (fs.existsSync(source) && !fs.lstatSync(source).isDirectory()) {
+    fs.copyFileSync(source, destination);
+    return;
+  } 
+
   if (!fs.existsSync(destination)) {
     fs.mkdirSync(destination, { recursive: true });
   }
@@ -123,7 +116,7 @@ function copyFolderSync(source, destination, cb) {
     const destFile = path.join(destination, file);
 
     if (fs.lstatSync(srcFile).isDirectory()) {
-      copyFolderSync(srcFile, destFile, cb);
+      copyItemSync(srcFile, destFile, cb);
     } else {
       fs.copyFileSync(srcFile, destFile);
       if (typeof cb === 'function') cb(srcFile, destFile)
@@ -135,7 +128,22 @@ function createFolder(path, options) {
   fs.mkdirSync(path.toLowerCase(), options);
 }
 
+function cleanUp() {
+  try {
+    Promise.resolve().then(() => {
+      const today = new Date();
+      const todaytemplate = templSuffix + today.toJSON().split('T')[0];
+      fs.readdirSync(os.tmpdir()).forEach(file => {
+        if (file.startsWith(templSuffix) && todaytemplate !== file) {
+          removeFolder(path.join(os.tmpdir(), file));
+        }
+      })
+    });
+  } catch (error) {};
+}
+
 function removeFolder(path) {
+  if (!fs.existsSync(path)) return;
   fs.rmSync(path, { recursive: true, force: true });
 }
 
@@ -157,11 +165,22 @@ async function updateProjectName(projectName) {
 }
 
 // Component creation
-async function createComponent(componentName, targetPath) {
+async function createComponent(componentName, targetPath, type) {
+  if (!componentName) {
+    console.error('Error:'.red + 'Component name is required');
+    process.exit(1);
+  }
 
-  componentName = componentName.trim(); // Removing any space
+  const config = projectConfigLoader(cwd);
+  const cliScaffoldConfig = config.cli.scaffold;
+
+  const $path = getPathFromName(componentName);
+
+  componentName = $path.name.trim(); // Removing any space
   // Making the first letter of the component name upper. Ex: home => Home 
   componentName = componentName[0].toUpperCase() + componentName.substring(1);
+
+  targetPath = $path.dir || targetPath;
 
   const packagePath = path.join(process.cwd(), 'package.json');
   if (!fs.existsSync(packagePath)) {
@@ -170,86 +189,108 @@ async function createComponent(componentName, targetPath) {
   }
 
   // Check if path exists, create if it doesn't
-  if (targetPath !== './') {
+  if (targetPath) {
+    // Removing any leading '.' if exists
+    targetPath = targetPath[0] === '.' ? targetPath.substring(1) : targetPath;
+    // joining the target path
     targetPath = path.join('src', targetPath, componentName.toLowerCase());
   } else {
-    targetPath = path.join('src', componentName.toLowerCase());
+    const dir = (cliScaffoldConfig.templates[type] || {}).path || '';
+    targetPath = path.join('src', dir, componentName.toLowerCase());
   }
 
   // check if the target path exists, create if it doesn't
-  if (!fs.existsSync(targetPath)) {
-    console.log('');
-    console.log(`Scaffolding ${componentName.green} in ${targetPath.yellow}...`);
+  if (fs.existsSync(targetPath))
+    return console.log(`Component ${componentName.yellow} already exists in ${targetPath.yellow}`);
 
-    //fs.mkdirSync(targetPath, { recursive: true });
-    createFolder(targetPath, { recursive: true });
+  console.log('');
+  console.log(`Scaffolding ${componentName.green} in ${targetPath.yellow}...`);
 
-    // Create temporary directory
-    const tempDir = path.join(os.tmpdir(), 'temp-' + Math.random().toString(36).slice(2, 11));
+  createFolder(targetPath, { recursive: true });
 
-    // Clone the specific branch/directory
-    await simpleGit().clone(
-      repoUrl, tempDir, ['--depth', '1']  // Shallow clone for speed
-    );
+  // Create temporary directory
+  const templateDir = getTemplatePath();
+  let templatesLoaded = false;
+
+  try {
+    if (!fs.existsSync(templateDir)) {
+      templatesLoaded = true;
+      console.log('Loading the bouer templates...');
+      // Clone the specific branch/directory
+      await simpleGit().clone(
+        repoUrl, templateDir, ['--depth', '1']  // Shallow clone for speed
+      );
+    }
 
     // Copy only the needed template directory
-    const repoPath = path.join(tempDir, 'component', 'blank');  // Adjust path as needed
-    //fs.cpSync(repoPath, targetPath, { recursive: true });
-    copyFolderSync(repoPath, targetPath);
+    const repoPath = path.join(templateDir, defaultBouerVersion, 'component', type || 'blank');  // Adjust path as needed
+    copyItemSync(repoPath, targetPath);
 
+    renameGeneratedComponent(cliScaffoldConfig, componentName, targetPath, type || 'blank');
+  } catch (error) {
+    console.error('Fail to create component'.red, error.message);
+    removeFolder(targetPath);
+  } finally {
     // Clean up temp directory
-    //fs.rmSync(tempDir, { recursive: true, force: true });
-    removeFolder(tempDir);
-
-    renameGeneratedComponent(componentName, targetPath);
-
-    const colorizedName = (componentName + 'Component').green;
-
-    console.log(`Component ${componentName.green} created successfully in ${targetPath.yellow}`);
-    console.log(`Make sure to add the ${ colorizedName } to: { components: [${ colorizedName }] } or in { children: [${ colorizedName }] }`)
-  } else {
-    console.log(`Component ${componentName.yellow} already exists in ${targetPath.yellow}`);
+    if (templatesLoaded) cleanUp();
   }
-
 }
 
-function renameGeneratedComponent(componentName, targetPath) {
+function renameGeneratedComponent(cliScaffoldConfig, componentName, targetPath, type) {
 
-  const fileExtensions = ['scss', 'css', 'html', 'ts'];
-  const componentNameLower = componentName.toLowerCase();
+  const files = fs.readdirSync(path.join(targetPath));
+  const $type = cliScaffoldConfig.templates[type];
+  const suffix = ($type.suffix || '').trim();
 
-  fileExtensions.forEach(ext => {
-    if (fs.existsSync(path.join(targetPath, `${ext}.tmp`))) {
-      fs.renameSync(
-        path.join(targetPath, `${ext}.tmp`),
-        path.join(targetPath, `${componentNameLower}.${ext}`)
-      );
-      console.log(' + '.green + `${componentNameLower}.${ext}`.yellow + ' created');
-    }
+  files.forEach(filepath => {
+    // get the file
+    const file = filepath.split('\\').pop();
+
+    // get the file extension type
+    const type = file.split('.')[0];
+
+    // loading the extension from config
+    const ext = cliScaffoldConfig[type] || type;
+
+    // building the name
+    const composedName = [componentName, suffix, ext]
+      .filter(x => x).map(x => x.trim().toLowerCase())
+      .join('.');
+
+    fs.renameSync(
+      path.join(targetPath, filepath), 
+      path.join(targetPath, composedName)
+    );
+    console.log(' + '.green + composedName.yellow + ' created');
   });
 
-  // update the ts file
-  const tsFile = path.join(targetPath, componentName + '.ts');
-  const tsContent = fs.readFileSync(tsFile, 'utf8');
+  // update the ts file content
+  const tsFile = [componentName, suffix, cliScaffoldConfig.script]
+      .filter(x => x).map(x => x.trim().toLowerCase()).join('.');
+  const tsFilePath = path.join(targetPath, tsFile);
+  const tsContent = fs.readFileSync(tsFilePath, 'utf8');
 
   const updatedContent = tsContent
-    .replace(/{name}/g, componentName)
-    .replace(/{lower-name}/g, componentName.toLowerCase());
+    .replace(/{name}/g, componentName + suffix)
+    .replace(/{lower-name}/g, componentName.toLowerCase())
+    .replace(/{suffix}/g, suffix.length > 0 ? `.${suffix.toLowerCase()}` : '')
+    .replace(/{view}/g, cliScaffoldConfig.view) // import extension
+    .replace(/{style}/g, cliScaffoldConfig.style); // import extension
 
+  fs.writeFileSync(tsFilePath, updatedContent);
 
-  fs.writeFileSync(tsFile, updatedContent);
+  const colorizedName = (componentName + suffix).green;
+
+  console.log(`Component ${colorizedName} created successfully in ${targetPath.yellow}`);
+  console.log(
+    `Make sure to add the ${colorizedName} in: Bouer { components: [${colorizedName}] } or in Component { children: [${colorizedName}] }`
+  );
 }
 
 // Webpack config creation
 function createWebpackConfig(options) {
-  const cliWebpackConfigPath = path.join(__dirname, '..', 'webpack.config.js');
+  const cliWebpackConfigPath = path.join(cwd, '..', 'webpack.config.js');
   let content = fs.readFileSync(cliWebpackConfigPath, 'utf8');
-
-  const splitted = content.split('\n');
-  const line = splitted.findIndex(x => x.includes('const projectPath'));
-  splitted[line] = splitted[line].split('=')[0] + `= __dirname;`;
-
-  content = splitted.join('\n');
 
   if ('preview' in options) {
     console.log("\n\n");
@@ -260,10 +301,77 @@ function createWebpackConfig(options) {
     console.log('Generating ' + 'webpack.config.js'.yellow + ' file...');
     fs.writeFileSync(path.join(process.cwd(), 'webpack.config.js'), content, 'utf8');
     console.log('webpack.config.js'.green + ' successfully generated...');
-
   } catch (error) {
     console.error('Error:'.red + 'Could not create webpack.config.js file.');
     console.error('Error:'.red, error.message);
     process.exit(1);
   }
 }
+
+// Project creation
+export default function createCommand(program) {
+  const create = program
+    .command('create')
+    .alias('c')
+    .description('Create a new Bouer.js project, component, or service');
+
+  // Subcommand for new project
+  create
+    .command('new <project-name>')
+    .description('Create a new Bouer.js project')
+    .option('-t, --template <type>', 'Template type (blank or routing)', 'blank')
+    .action(async (projectName, options) => {
+
+      try {
+        createProject(projectName, options);
+      } catch (error) {
+        console.error('Error:'.red, error.message);
+        process.exit(1);
+      }
+    });
+
+  // Subcommand for component
+  create
+    .command('component <component-name>')
+    .alias('cp')
+    .description('Creates a new component')
+    .option('-p, --path <path>', 'Path to create the component (path: components)', '')
+    .action(async (componentName, options) => {
+      try {
+        await createComponent(componentName, options.path, 'blank');
+      } catch (error) {
+        console.error('Error:'.red, error.message);
+        process.exit(1);
+      }
+    });
+
+  // Subcommand for component
+  create
+    .command('page <page-name>')
+    .alias('pg')
+    .description('Creates a new component')
+    .option('-p, --path <path>', 'Path to create the page component (path: pages)', '')
+    .action(async (componentName, options) => {
+      try {
+        await createComponent(componentName, options.path, 'page');
+      } catch (error) {
+        console.error('Error:'.red, error.message);
+        process.exit(1);
+      }
+    });
+
+  // Subcommand for webpack config
+  create
+    .command('config')
+    .alias('cfg')
+    .option('--preview', 'Used to preview the configuration instead of create it')
+    .description('Generates a new webpack.config.js for the project according to the cli config')
+    .action(async (options) => {
+      try {
+        createWebpackConfig(options);
+      } catch (error) {
+        console.error('Error:'.red, error.message);
+        process.exit(1);
+      }
+    });
+};
