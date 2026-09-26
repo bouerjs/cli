@@ -1,128 +1,164 @@
-const path = require('path');
+import path from 'path';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import HtmlMinimizerPlugin from 'html-minimizer-webpack-plugin';
+import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
+import TerserWebpackPlugin from 'terser-webpack-plugin';
 
-const HtmlMinimizerPlugin = require('html-minimizer-webpack-plugin');
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ElementInjectorPlugin = require('./plugins/element-injector-plugin');
+import projectConfigLoader from './helpers/project-config-loader.js';
+import AssetCopyPlugin from './plugins/asset-copy-plugin.js';
 
-module.exports = (env, argv) => {
-  const regex_nm = /node_modules/;
-  const mode = argv.mode;
-  const isProd = env.NODE_ENV === 'production' || mode === 'production';
+export default (env, argv) => {
+  const nm_rgx = /node_modules/;
+  const cwd = argv.projectPath || env.projectPath || process.cwd();
+  const mode = argv.mode || env.NODE_ENV || 'development';
 
-  const projectPath = argv.projectPath || env.projectPath || process.cwd();
-  const port = argv.port || 8080;
+  // Global config
+  const config = projectConfigLoader(cwd);
 
-  const optionsBuilder = ext => {
-    return {
-      name: '[path][name].' + (ext || '[ext]'),
-      context: './src',
-    };
-  };
+  // Project config
+  const projectConfig = config.project;
+
+  // Cli config
+  const cliServerConfig = config.cli.server;
+
+  // Build mode[development|production] config
+  const buildModeConfig = projectConfig.build[mode];
+
+  // Build filename
+  const filename = [buildModeConfig.filename, '[name]', buildModeConfig.hash, 'js']
+    .filter(x => x && x !== 'none').join('.');
 
   return {
-    entry: path.resolve(projectPath, 'src', 'index.ts'),
-    devtool: isProd ? undefined : 'inline-source-map',
-    mode: mode ?? isProd ? 'production' : 'development',
+    entry: projectConfig.entry,
+    devtool: buildModeConfig.devtool,
+    mode: mode,
+    context: path.resolve(cwd, projectConfig.context), // Set the base directory
     plugins: [
       new HtmlWebpackPlugin({
-        template: './src/index.html',
-        filename: 'index.html',
+        template: `./${projectConfig.build.index}`,
+        filename: projectConfig.build.index
       }),
-      new ElementInjectorPlugin({
-        attrs: [{ name: 'rel', value: "stylesheet" }, { name: 'type', value: "text/css" }],
-        filename: 'main.css',
+      new AssetCopyPlugin({
+        patterns: (projectConfig.build.assets || []).map(asset => {
+          return {
+            from: path.resolve(cwd, projectConfig.context, asset),
+            to: path.resolve(cwd, projectConfig.build.outputPath, asset)
+          };
+        })
       })
     ],
     output: {
-      path: path.resolve(projectPath, 'dist'),
-      filename: 'main.js',
+      path: path.resolve(cwd, projectConfig.build.outputPath),
+      filename: filename,
       clean: true
     },
     module: {
       rules: [
         { // Processing `ts` and `js` files
           test: /\.(ts|js)$/,
-          use: ['babel-loader', 'ts-loader'],
-          exclude: regex_nm,
-        },
-        { // Processing `html` files
-          test: /\.html$/i,
           use: [
+            'babel-loader',
             {
-              loader: 'file-loader',
-              options: optionsBuilder('html'),
+              loader: 'ts-loader',
+              options: {
+                configFile: path.resolve(cwd, buildModeConfig.tsConfig || 'tsconfig.json'),
+                transpileOnly: true
+              },
             }
           ],
-          exclude: [regex_nm, path.resolve(projectPath, 'src', 'index.html')],
+          exclude: [nm_rgx],
         },
-        { // Processing `css` files
-          test: /\.css$/,
-          use: {
-            loader: 'file-loader',
-            options: optionsBuilder()
+
+        { // Process the `index.html` file
+          test: /\.html$/i,
+          loader: 'html-loader',
+          options: {
+            sources: true
           },
-          exclude: [regex_nm]
+          exclude: [nm_rgx],
+          include: [new RegExp(projectConfig.build.index + '$')]
         },
-        { // Processing `sass` files
+
+        { // Processing `html` files except `index.html`
+          test: /\.html$/i,
+          type: 'asset/resource',
+          generator: {
+            filename: '[path][name].html'
+          },
+          exclude: [nm_rgx, new RegExp(projectConfig.build.index + '$')]
+        },
+
+        { // Processing `css` files
+          test: /\.css$/i,
+          type: 'asset/resource',
+          generator: {
+            filename: '[path][name].css'
+          },
+          exclude: [nm_rgx]
+        },
+
+        { // Processing `scss` files, and compiling them into `css`
           test: /\.s[ac]ss$/i,
-          use: [
-            { // Output the files
-              loader: 'file-loader',
-              options: optionsBuilder('css'),
-            },
-            // Compiles Sass to CSS
-            'sass-loader',
-          ],
-          exclude: [regex_nm]
+          type: 'asset/resource',
+          generator: {
+            filename: '[path][name].css'
+          },
+          use: ['sass-loader'],
+          exclude: [nm_rgx]
         },
+
         { // Processing other `static` files
           test: /\.(png|jpe?g|gif|svg|eot|otf|ttf|woff|woff2|txt|pdf)$/i,
-          type: "asset",
-          use: {
-            loader: 'file-loader',
-            options: optionsBuilder(),
+          type: 'asset/resource',
+          generator: {
+            filename: '[path][name].[ext]'
           },
-          exclude: [regex_nm]
+          exclude: [nm_rgx]
         },
       ]
     },
     resolve: {
       extensions: ['.ts', '.js'],
     },
-    optimization: isProd ? {
-      minimize: true,
-      minimizer: [
-        new CssMinimizerPlugin({
-          test: /\.css$/i,
+    optimization: {
+      minimize: buildModeConfig.minimize,
+      // Configures vendor code splitting
+      splitChunks: buildModeConfig.splitChunks ? {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: nm_rgx,
+            name: 'vendor',
+            chunks: 'all',
+            enforce: true
+          }
+        }
+      } : {},
+      // If production, minify
+      minimizer: buildModeConfig.minimize ? [
+        new TerserWebpackPlugin({
+          // Keep class names because Bouer uses them as component names
+          terserOptions: { keep_classnames: true }
         }),
-        new HtmlMinimizerPlugin({
-          test: /\.html$/i,
-        }),
-        new TerserPlugin({
-          test: /\.js(\?.*)?$/i,
-        }),
-      ],
-    } : { minimize: false },
+        new CssMinimizerPlugin({ test: /\.css$/i }),
+        new HtmlMinimizerPlugin({ test: /\.html$/i }),
+      ] : []
+    },
     watchOptions: {
-      ignored: regex_nm,
+      ignored: nm_rgx,
     },
     devServer: {
-      port: port,
+      hot: cliServerConfig.hot,
+      port: argv.port || cliServerConfig.port,
       historyApiFallback: true,
-      hot: true,
-
-      setupMiddlewares: (middlewares, devServer) => {
-        devServer.app.use((req, res, next) => {
-          if (!req.route) {
-            res.sendFile(path.join(projectPath, 'index.html'));
-          } else {
-            next();
-          }
-        });
-        return middlewares;
-      }
+      static: {
+        directory: path.resolve(cwd, cliServerConfig.staticDir),
+      },
+      devMiddleware: {
+        publicPath: cliServerConfig.publicPath,
+      },
+      open: cliServerConfig.openBrowser,
+      compress: cliServerConfig.compress,
     }
-  }
+  };
 };
