@@ -1,12 +1,14 @@
 #!/usr/bin/env node
+import { Command } from 'commander';
+import registerCommands from './commands/index.js';
+import { createRequire } from 'module';
 
-const { Command } = require('commander');
-const registerCommands = require('./commands');
-
+const require = createRequire(import.meta.url);
+const { version } = require('./package.json');
 const program = new Command('bouer');
 
 // Set version
-program.version(require('./package.json').version, '-v, --version');
+program.version(version, '-v, --version');
 
 // Register all commands
 registerCommands(program);
