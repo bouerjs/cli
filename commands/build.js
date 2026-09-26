@@ -1,19 +1,24 @@
-const path = require('path');
-const fs = require('fs');
-const { execute } = require('../helpers/executor');
-require("colors");
+import path from 'path';
+import fs from 'fs';
+import { execute } from '../helpers/executor.js';
+import projectConfigLoader from '../helpers/project-config-loader.js';
+import 'colors';
 
-module.exports = function buildCommand(program) {
+
+export default function buildCommand(program) {
   program
     .command('build')
     .description('Builds the Bouer.js project for development or production')
     .option('-m, --mode <mode>', 'Build mode (dev or prod)', 'dev')
     .option('--mix-config <config-path>', 'The other webpack.config.js path that need to mixed to', '')
-    .action((options) => {
+    .action(options => {
       try {
+        
+        const cwd = process.cwd();
+        const config = projectConfigLoader(cwd);
 
         // Check if we're in a Bouer.js project by looking for package.json
-        const packagePath = path.join(process.cwd(), 'package.json');
+        const packagePath = path.join(cwd, 'package.json');
         if (!fs.existsSync(packagePath)) {
           console.error('Error:'.red + ' No package.json found. Make sure you are in a Bouer.js project directory.');
           process.exit(1);
@@ -22,10 +27,15 @@ module.exports = function buildCommand(program) {
         // Build the project using webpack
         const mode = ({
           dev: 'development',
-          prod: 'production'
-        })[options.mode.toLowerCase()] || 'development';
+          prod: 'production',
+          development: 'development',
+          production: 'production'
+        })[options.mode.toLowerCase()];
 
         console.log(`Starting Bouer build: ${mode.green}...`);
+
+        // Set the mix config if provided
+        options.mixConfig = options.mixConfig || config.project.build[mode].wpackMixConfig;
 
         // Execute the webpack build command
         const $execution = execute(`npx webpack --mode ${mode}`, options);
@@ -35,6 +45,7 @@ module.exports = function buildCommand(program) {
             console.error('Error building project.'.red + ' Check the console output for more information.');
             process.exit(1);
           }
+
           console.log('Build completed successfully!'.green);
         });
 
