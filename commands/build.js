@@ -36,7 +36,7 @@ export default function buildCommand(program) {
         console.log(`Starting Bouer build: ${mode.green}...`);
 
         // Set the mix config if provided
-        options.mixConfig = options.mixConfig || config.project.build[mode].wpackMixConfig;
+        options.mixConfig = options.mixConfig || config.project.build[mode].webpackMixConfig;
 
         // Execute the webpack build command
         const $execution = execute(`npx webpack --mode ${mode}`, options);
