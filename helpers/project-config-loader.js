@@ -74,11 +74,11 @@ function validateConfigStructure(config) {
 		// If the layer is an object
 		if (type === 'object') {
 			// Check each required property
-			for (const prop of $structure.required || []) {
+			for (const prop in $structure.properties) {
 				breadcrumb.push(prop);
 	
 				// If the property is missing, error
-				if (!(prop in layer)) {
+				if (!(prop in layer) && ($structure.required || []).includes(prop)) {
 					errors.push(toPath(breadcrumb) + `: Field is required`);
 				}
 				
