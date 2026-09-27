@@ -57,7 +57,7 @@
                 "minimize": false,
                 "splitChunks": true,
                 "devtool": "eval-cheap-module-source-map",
-                "wpackMixConfig": ""
+                "webpackMixConfig": ""
               }
             },
             "production": {
@@ -70,7 +70,7 @@
                 "minimize": true,
                 "splitChunks": true,
                 "devtool": false,
-                "wpackMixConfig": ""
+                "webpackMixConfig": ""
               }
             }
           },
@@ -256,7 +256,7 @@
           "description": "The Webpack source map configuration. Set to false to disable source maps.",
           "default": "eval-cheap-module-source-map"
         },
-        "wpackMixConfig": {
+        "webpackMixConfig": {
           "type": "string",
           "description": "The path to a custom Webpack configuration file that is merged with the Bouer build configuration."
         }
