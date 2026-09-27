@@ -9,7 +9,6 @@ import TerserWebpackPlugin from 'terser-webpack-plugin';
  * 2. target the plugin via node_modules (`import AssetCopyPlugin from './node_modules/bouer-cli/plugins/asset-copy-plugin.js'`)
  */
 import AssetCopyPlugin from './plugins/asset-copy-plugin.js';
-
 import loadBouerConfig from './helpers/project-config-loader.js';
 
 export default (env, argv) => {
@@ -116,10 +115,10 @@ export default (env, argv) => {
           test: /\.(png|jpe?g|gif|svg|eot|otf|ttf|woff|woff2|txt|pdf)$/i,
           type: 'asset/resource',
           generator: {
-            filename: '[path][name].[ext]'
+            filename: '[path][name][ext]'
           },
           exclude: [nm_rgx]
-        },
+        }
       ]
     },
     resolve: {
