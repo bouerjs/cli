@@ -1,4 +1,5 @@
 {
+  "title": "Bouer Configuration",
   "project": {
     "version": "3.3.0",
     "context": "src",
