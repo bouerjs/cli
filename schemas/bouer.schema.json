@@ -131,23 +131,29 @@
             "templates": {
               "type": "object",
               "description": "Custom scaffold templates that define where generated files are placed and how their names are suffixed.",
-              "additionalProperties": {
-                "$ref": "#/$defs/scaffoldType"
-              },
-              "default": {
+              "properties": {
                 "blank": {
-                  "path": "components",
-                  "suffix": ""
+                  "$ref": "#/$defs/scaffoldType",
+                  "description": "The template used for generating blank components.",
+                  "default": {
+                    "path": "components",
+                    "suffix": ""
+                  }
                 },
                 "page": {
-                  "path": "pages",
-                  "suffix": ""
+                  "$ref": "#/$defs/scaffoldType",
+                  "description": "The template used for generating page components.",
+                  "default": {
+                    "path": "pages",
+                    "suffix": ""
+                  }
                 }
               },
               "required": [
                 "blank",
                 "page"
-              ]
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -168,7 +174,7 @@
               "default": true
             },
             "port": {
-              "type": "integer",
+              "type": "number",
               "description": "The network port used by the development server.",
               "minimum": 1,
               "maximum": 65535,
@@ -257,7 +263,6 @@
       },
       "required": [
         "filename",
-        "hash",
         "tsConfig",
         "minimize",
         "splitChunks",
@@ -279,11 +284,14 @@
         }
       },
       "required": [
-        "path",
-        "suffix"
+        "path"
       ],
       "additionalProperties": false
     }
   },
+  "required": [
+    "project",
+    "cli"
+  ],
   "additionalProperties": false
 }
