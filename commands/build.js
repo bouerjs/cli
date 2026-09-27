@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { execute } from '../helpers/executor.js';
-import projectConfigLoader from '../helpers/project-config-loader.js';
+import loadBouerConfig from '../helpers/project-config-loader.js';
 import 'colors';
 
 
@@ -16,7 +16,7 @@ export default function buildCommand(program) {
       try {
         
         const cwd = process.cwd();
-        const config = projectConfigLoader(cwd);
+        const config = loadBouerConfig(cwd);
 
         // Check if we're in a Bouer.js project by looking for package.json
         const packagePath = path.join(cwd, 'package.json');
