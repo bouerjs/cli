@@ -3,9 +3,14 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import HtmlMinimizerPlugin from 'html-minimizer-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import TerserWebpackPlugin from 'terser-webpack-plugin';
-
-import projectConfigLoader from './helpers/project-config-loader.js';
+/**
+ * to be able to use `asset-copy-plugin` locally you need:
+ * 1. install bouel-cli as dev dependency (`npm install --save-dev bouer-cli`)
+ * 2. target the plugin via node_modules (`import AssetCopyPlugin from './node_modules/bouer-cli/plugins/asset-copy-plugin.js'`)
+ */
 import AssetCopyPlugin from './plugins/asset-copy-plugin.js';
+
+import loadBouerConfig from './helpers/project-config-loader.js';
 
 export default (env, argv) => {
   const nm_rgx = /node_modules/;
@@ -13,12 +18,12 @@ export default (env, argv) => {
   const mode = argv.mode || env.NODE_ENV || 'development';
 
   // Global config
-  const config = projectConfigLoader(cwd);
+  const config = loadBouerConfig(cwd);
 
   // Project config
   const projectConfig = config.project;
 
-  // Cli config
+  // CLI config
   const cliServerConfig = config.cli.server;
 
   // Build mode[development|production] config
