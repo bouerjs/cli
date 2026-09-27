@@ -7,10 +7,14 @@ import 'colors';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const cwd = process.cwd();
+const runtimeConfigName = 'runtime.webpack.config.js';
+const runtimeWebpackConfigPath = path.join(__dirname, '../templates', runtimeConfigName);
 const cliWebpackConfigPath = path.join(__dirname, '..', 'webpack.config.js');
-const projectWebpackConfigPath = path.join(process.cwd(), 'webpack.config.js');
+const projectWebpackConfigPath = path.join(cwd, 'webpack.config.js');
 
 function tempConfigHandler(options) {
+  const wpConfig = options.wpConfig;
   const mixConfig = options.mixConfig;
 
   // If no mixConfig is provided, return the default webpack config
@@ -21,35 +25,21 @@ function tempConfigHandler(options) {
       cleanup: () => { }
     };
 
-  const mixConfigPath = path.join(process.cwd(), mixConfig);
+  const mixConfigPath = path.join(cwd, mixConfig);
 
   if (!fs.existsSync(mixConfigPath))
     throw new Error(`Error: The provided --mix-config ${mixConfig} file was not found.`);
 
   // Set the content of the temporary webpack config file
-  const fileContent =
-    `
-const { merge } = require('webpack-merge');
-
-// loading the cli webpack config
-const cliConfig = require('${cliWebpackConfigPath.replace(/\\/g, '\\\\')}');
-
-// loading the project webpack config
-const targetConfig = require('${mixConfigPath.replace(/\\/g, '\\\\')}');
-
-module.exports = (env, argv) => {
-  const cliConfigData = typeof cliConfig === 'function' ? cliConfig(env, argv) : cliConfig; 
-  const targetConfigData = typeof targetConfig === 'function' ? targetConfig(env, argv) : targetConfig; 
-
-  return merge(cliConfigData, targetConfigData);
-};`;
-
-  const runtimeConfigName = 'runtime.webpack.config.js';
-  console.log(`Generating temporary ${runtimeConfigName.yellow} file...`);
+  
+  const fileContent = fs.readFileSync(runtimeWebpackConfigPath, 'utf-8')
+    .replace(/{webpack-config-path}/g, wpConfig.replace(/\\/g, '\\\\'))
+    .replace(/{mix-config-path}/g, mixConfigPath.replace(/\\/g, '\\\\'));
 
   // writing the merged config to a temporary file
-  const runtimeConfigPath = path.join(process.cwd(), runtimeConfigName);
+  const runtimeConfigPath = path.join(cwd, runtimeConfigName);
   fs.writeFileSync(runtimeConfigPath, fileContent, 'utf-8');
+  console.log(`Generated temporary ${runtimeConfigName.yellow} file...`);
 
   // Return the temporary config path and cleanup function
   return {
@@ -81,37 +71,30 @@ function execute(command, commandOptions) {
   // Extract the command
   const $command = $commandArgs.shift(); // Ex: npx
 
-  // 1. If the project does not have a webpack.config.js file, use the cli webpack.config.js file
-  if (!fs.existsSync(projectWebpackConfigPath)) {
-    // Add the ars arguments
-    $commandArgs.push('--config', cliWebpackConfigPath);
-  }
-  // 2. If the project has a webpack.config.js file, use that
-  else if (fs.existsSync(projectWebpackConfigPath) && !commandOptions.mixConfig) {
-    // Add the ars arguments
-    $commandArgs.push('--config', projectWebpackConfigPath);
-  }
-  // 3. If the mix-config option is provided, merge the project webpack.config.js file with the cli webpack.config.js file
-  else if (fs.existsSync(projectWebpackConfigPath) && commandOptions.mixConfig) {
-    // Use temporaty webpack config if mix-config is provided, otherwise use the `webpackConfigToUse` provided
-    tempConfigResponse = tempConfigHandler(commandOptions);
+  const hasProjectWebpackConfig = fs.existsSync(projectWebpackConfigPath);
 
-    // Add the ars arguments
-    $commandArgs.push('--config', tempConfigResponse.configPath);
+  // If the project has its own webpack.config.js file, use that
+  if (hasProjectWebpackConfig) {
+    $commandArgs.push('--config', commandOptions.wpConfig = projectWebpackConfigPath);
+  } else {
+    // Otherwise use the cli webpack.config.js file
+    $commandArgs.push('--config', commandOptions.wpConfig = cliWebpackConfigPath);
   }
-  // 4. If the mix-config option is not provided, use the project webpack.config.js file
-  else {
-    console.log('Using the cli ' + 'webpack.config.js'.yellow + ' file, if this is not what you wanted check running command...');
-    $commandArgs.push('--config', cliWebpackConfigPath);
+
+  if (commandOptions.mixConfig) { 
+    $commandArgs.pop(); // webpack.config.js
+    $commandArgs.pop(); // --config
+
+    tempConfigResponse = tempConfigHandler(commandOptions);
+    $commandArgs.push('--config', tempConfigResponse.configPath);
   }
 
   // Execute the command
   const $execution = spawn($command, $commandArgs, { stdio: 'inherit', shell: true });
 
   // Handle the exit signals
-  ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGQUIT'].forEach((signal) => {
-    process.on(signal, () => {
-      $execution.kill(signal); // Send SIGINT to Webpack process
+  ['close', 'exit'].forEach((signal) => {
+    process.once(signal, () => {
       tempConfigResponse.cleanup();
       process.exit(0);
     });
