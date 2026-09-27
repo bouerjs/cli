@@ -4,7 +4,7 @@ import os from 'os';
 import fs from 'fs';
 import { execSync, } from 'child_process';
 import { createRequire } from 'module';
-import projectConfigLoader from '../helpers/project-config-loader.js';
+import loadBouerConfig from '../helpers/project-config-loader.js';
 import 'colors';
 
 const cwd = process.cwd();
@@ -171,7 +171,7 @@ async function createComponent(componentName, targetPath, type) {
     process.exit(1);
   }
 
-  const config = projectConfigLoader(cwd);
+  const config = loadBouerConfig(cwd);
   const cliScaffoldConfig = config.cli.scaffold;
 
   const $path = getPathFromName(componentName);
@@ -287,33 +287,12 @@ function renameGeneratedComponent(cliScaffoldConfig, componentName, targetPath, 
   );
 }
 
-// Webpack config creation
-function createWebpackConfig(options) {
-  const cliWebpackConfigPath = path.join(cwd, '..', 'webpack.config.js');
-  let content = fs.readFileSync(cliWebpackConfigPath, 'utf8');
-
-  if ('preview' in options) {
-    console.log("\n\n");
-    return console.log(content);
-  }
-
-  try {
-    console.log('Generating ' + 'webpack.config.js'.yellow + ' file...');
-    fs.writeFileSync(path.join(process.cwd(), 'webpack.config.js'), content, 'utf8');
-    console.log('webpack.config.js'.green + ' successfully generated...');
-  } catch (error) {
-    console.error('Error:'.red + 'Could not create webpack.config.js file.');
-    console.error('Error:'.red, error.message);
-    process.exit(1);
-  }
-}
-
 // Project creation
 export default function createCommand(program) {
   const create = program
     .command('create')
     .alias('c')
-    .description('Create a new Bouer.js project, component, or service');
+    .description('Create a new Bouer.js project or a component');
 
   // Subcommand for new project
   create
@@ -354,21 +333,6 @@ export default function createCommand(program) {
     .action(async (componentName, options) => {
       try {
         await createComponent(componentName, options.path, 'page');
-      } catch (error) {
-        console.error('Error:'.red, error.message);
-        process.exit(1);
-      }
-    });
-
-  // Subcommand for webpack config
-  create
-    .command('config')
-    .alias('cfg')
-    .option('--preview', 'Used to preview the configuration instead of create it')
-    .description('Generates a new webpack.config.js for the project according to the cli config')
-    .action(async (options) => {
-      try {
-        createWebpackConfig(options);
       } catch (error) {
         console.error('Error:'.red, error.message);
         process.exit(1);
