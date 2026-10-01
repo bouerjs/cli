@@ -1,4 +1,3 @@
-import os from 'os';
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
@@ -13,7 +12,7 @@ export default function loadBouerConfig(projectPath) {
 	// Check if the configuration file does not exists
 	if (!fs.existsSync(configPath)) {
 		// Loading the default configuration
-		const defaultBouerConfig = require('../default.bouer.json');
+		const defaultBouerConfig = require('../templates/default.bouer.json');
 
 		// Creating the configuration file in the project
 		fs.writeFileSync(configPath, JSON.stringify(defaultBouerConfig, null, 2), 'utf8');
