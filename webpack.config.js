@@ -3,12 +3,8 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import HtmlMinimizerPlugin from 'html-minimizer-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import TerserWebpackPlugin from 'terser-webpack-plugin';
-/**
- * to be able to use `asset-copy-plugin` locally you need:
- * 1. install bouel-cli as dev dependency (`npm install --save-dev bouer-cli`)
- * 2. target the plugin via node_modules (`import AssetCopyPlugin from './node_modules/bouer-cli/plugins/asset-copy-plugin.js'`)
- */
 import AssetCopyPlugin from './plugins/asset-copy-plugin.js';
+import SizeBudgetPlugin from './plugins/size-budget-plugin.js';
 import loadBouerConfig from './helpers/project-config-loader.js';
 
 export default (env, argv) => {
@@ -49,6 +45,10 @@ export default (env, argv) => {
             to: path.resolve(cwd, projectConfig.build.outputPath, asset)
           };
         })
+      }),
+      new SizeBudgetPlugin({
+        mode: mode,
+        budgets: projectConfig.build.budgets
       })
     ],
     output: {
