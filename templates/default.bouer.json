@@ -26,11 +26,23 @@
         "minimize": true,
         "splitChunks": true,
         "devtool": false
+      },
+      "budgets": {
+        "entry": {
+          "maximumWarning": "2mb",
+          "_maximumError": "5mb",
+          "exclude": []
+        },
+        "resources": {
+          "maximumWarning": "2mb",
+          "maximumError": "4mb",
+          "exclude": []
+        }
       }
     }
   },
   "cli": {
-    "scaffold": {
+    "component:scaffold": {
       "view": "html",
       "style": "css",
       "script": "ts",
