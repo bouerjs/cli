@@ -9,7 +9,7 @@ import 'colors';
 
 const cwd = process.cwd();
 const require = createRequire(import.meta.url);
-const defaultBouerConfig = require('../default.bouer.json');
+const defaultBouerConfig = require('../templates/default.bouer.json');
 const defaultBouerVersion = defaultBouerConfig.project.version;
 
 const templSuffix = 'templates-bouer-cli-';
@@ -172,7 +172,7 @@ async function createComponent(componentName, targetPath, type) {
   }
 
   const config = loadBouerConfig(cwd);
-  const cliScaffoldConfig = config.cli.scaffold;
+  const cliScaffoldConfig = config.cli['component:scaffold'];
 
   const $path = getPathFromName(componentName);
 

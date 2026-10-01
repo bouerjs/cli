@@ -33,11 +33,10 @@ function createWebpackConfig(options) {
 function createBouerConfig() {
   const configPath = path.resolve(cwd, 'bouer.json');
   const action = fs.existsSync(configPath) ? 'restored' : 'generated';
-  const defaultBouerConfig = require('../default.bouer.json');
+  const defaultBouerConfig = require('../templates/default.bouer.json');
 
   fs.writeFileSync(configPath, JSON.stringify(defaultBouerConfig, null, 2), 'utf8');
   console.log('bouer.json'.green + ' successfully '+ action +'...');
-
 }
 
 export default function configCommand(program) {

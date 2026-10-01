@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
 import 'colors';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,7 +21,7 @@ function tempConfigHandler(options) {
   // If no mixConfig is provided, return the default webpack config
   if (!options.mixConfig)
     return {
-      configPath: projectWebpackConfigPath,
+      configPath: wpConfig,
       // Cleanup function
       cleanup: () => { }
     };
@@ -28,30 +29,23 @@ function tempConfigHandler(options) {
   const mixConfigPath = path.join(cwd, mixConfig);
 
   if (!fs.existsSync(mixConfigPath))
-    throw new Error(`Error: The provided --mix-config ${mixConfig} file was not found.`);
+    throw new Error(`Error: The provided mix-config ${mixConfig} file was not found.`);
 
   // Set the content of the temporary webpack config file
-  
+
   const fileContent = fs.readFileSync(runtimeWebpackConfigPath, 'utf-8')
     .replace(/{webpack-config-path}/g, wpConfig.replace(/\\/g, '\\\\'))
     .replace(/{mix-config-path}/g, mixConfigPath.replace(/\\/g, '\\\\'));
 
   // writing the merged config to a temporary file
-  const runtimeConfigPath = path.join(cwd, runtimeConfigName);
+  const runtimeConfigPath = path.join(__dirname, '../temp', 'wp' + randomUUID().split('-')[0] + '.' + runtimeConfigName);
   fs.writeFileSync(runtimeConfigPath, fileContent, 'utf-8');
-  console.log(`Generated temporary ${runtimeConfigName.yellow} file...`);
 
   // Return the temporary config path and cleanup function
   return {
     configPath: runtimeConfigPath,
     cleanup: () => {
-      console.log(`Cleaning up ${runtimeConfigName.yellow} file...`);
-      fs.unlink(runtimeConfigPath, (err) => {
-        if (err) {
-          console.error('Error:'.red + ' Could not delete the temporary webpack config file.', runtimeConfigPath);
-          throw err;
-        }
-      });
+      fs.unlink(runtimeConfigPath, (code) => { });
     }
   };
 }
@@ -81,7 +75,7 @@ function execute(command, commandOptions) {
     $commandArgs.push('--config', commandOptions.wpConfig = cliWebpackConfigPath);
   }
 
-  if (commandOptions.mixConfig) { 
+  if (commandOptions.mixConfig) {
     $commandArgs.pop(); // webpack.config.js
     $commandArgs.pop(); // --config
 
