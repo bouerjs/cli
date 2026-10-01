@@ -5,7 +5,7 @@
   "properties": {
     "project": {
       "type": "object",
-      "description": "The project configuration.",
+      "description": "The primary container for application source definitions and build targets.",
       "properties": {
         "version": {
           "type": "string",
@@ -24,7 +24,7 @@
         },
         "build": {
           "type": "object",
-          "description": "The build configuration for the project.",
+          "description": "Project build configuration, contains webpack chunking, output target, and environment configurations.",
           "properties": {
             "index": {
               "type": "string",
@@ -72,6 +72,32 @@
                 "devtool": false,
                 "webpackMixConfig": ""
               }
+            },
+            "budgets": {
+              "type": "object",
+              "description": "Performance and asset size threshold limits applied during the production build.",
+              "properties": {
+                "entry": {
+                  "$ref": "#/$defs/budgetType",
+                  "description": "Configuration settings for the project entry entrypoints.",
+                  "default": {
+                    "maximumWarning": "2mb",
+                    "maximumError": "5mb",
+                    "exclude": []
+                  }
+                },
+                "resources": {
+                  "$ref": "#/$defs/budgetType",
+                  "description": "Configuration settings for project resources and static assets.",
+                  "default": {
+                    "maximumWarning": "2mb",
+                    "maximumError": "4mb",
+                    "exclude": []
+                  }
+                }
+              },
+              "required": [],
+              "additionalProperties": false
             }
           },
           "required": [
@@ -94,9 +120,9 @@
     },
     "cli": {
       "type": "object",
-      "description": "The CLI configuration for the project.",
+      "description": "Dictates scaffold file extensions and directory targets during generator commands.",
       "properties": {
-        "scaffold": {
+        "component:scaffold": {
           "type": "object",
           "description": "Configuration for generating project files and components using the Bouer CLI.",
           "properties": {
@@ -110,7 +136,7 @@
             },
             "style": {
               "type": "string",
-              "description": "The default stylesheet language used when generating components.",
+              "description": "The default stylesheet language (extension) used when generating components.",
               "enum": [
                 "css",
                 "scss",
@@ -121,7 +147,7 @@
             },
             "script": {
               "type": "string",
-              "description": "The default scripting language used when generating components.",
+              "description": "The default scripting language (extension) used when generating components.",
               "enum": [
                 "js",
                 "ts"
@@ -134,7 +160,7 @@
               "properties": {
                 "blank": {
                   "$ref": "#/$defs/scaffoldType",
-                  "description": "The template used for generating blank components.",
+                  "description": "Configuration settings for scaffolding `blank` or generic components.",
                   "default": {
                     "path": "components",
                     "suffix": ""
@@ -142,7 +168,7 @@
                 },
                 "page": {
                   "$ref": "#/$defs/scaffoldType",
-                  "description": "The template used for generating page components.",
+                  "description": "Configuration settings for scaffolding `page` components.",
                   "default": {
                     "path": "pages",
                     "suffix": ""
@@ -213,7 +239,7 @@
         }
       },
       "required": [
-        "scaffold",
+        "component:scaffold",
         "server"
       ],
       "additionalProperties": false
@@ -225,7 +251,7 @@
       "properties": {
         "filename": {
           "type": "string",
-          "description": "The base filename used for the generated bundle.",
+          "description": "The main filename used for the generated bundle.",
           "default": "app"
         },
         "hash": {
@@ -240,12 +266,12 @@
         },
         "minimize": {
           "type": "boolean",
-          "description": "Whether the generated JavaScript and other assets should be minimized.",
+          "description": "Enables minification and code optimization for generated assets.",
           "default": false
         },
         "splitChunks": {
           "type": "boolean",
-          "description": "Whether Webpack should split shared dependencies and modules into separate chunks.",
+          "description": "Enables chunk splitting to isolate shared dependencies and vendor code.",
           "default": true
         },
         "devtool": {
@@ -253,17 +279,16 @@
             "string",
             "boolean"
           ],
-          "description": "The Webpack source map configuration. Set to false to disable source maps.",
+          "description": "Defines the source map strategy used to generate debugging maps. Set to false to disable source maps in production mode.",
           "default": "eval-cheap-module-source-map"
         },
         "webpackMixConfig": {
           "type": "string",
-          "description": "The path to a custom Webpack configuration file that is merged with the Bouer build configuration."
+          "description": "Specifies the path to a custom Webpack file that will be merged with the base Webpack configuration."
         }
       },
       "required": [
         "filename",
-        "tsConfig",
         "minimize",
         "splitChunks",
         "devtool"
@@ -272,7 +297,6 @@
     },
     "scaffoldType": {
       "type": "object",
-      "description": "Defines the configuration for a custom scaffold type.",
       "properties": {
         "path": {
           "type": "string",
@@ -285,6 +309,31 @@
       },
       "required": [
         "path"
+      ],
+      "additionalProperties": false
+    },
+    "budgetType": {
+      "type": "object",
+      "properties": {
+        "maximumWarning": {
+          "type": ["string", "number"],
+          "description": "The maximum warning threshold for the budget."
+        },
+        "maximumError": {
+          "type": ["string", "number"],
+          "description": "The maximum error threshold for the budget."
+        },
+        "exclude": {
+          "type": "array",
+          "description": "A list of files, directories or a regex that should be excluded from the budget.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "maximumWarning",
+        "maximumError"
       ],
       "additionalProperties": false
     }
